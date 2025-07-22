@@ -14,7 +14,139 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_responses: {
+        Row: {
+          case_id: string
+          confidence_score: number | null
+          created_at: string
+          id: string
+          model_used: string | null
+          processing_time: number | null
+          response_text: string
+        }
+        Insert: {
+          case_id: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          model_used?: string | null
+          processing_time?: number | null
+          response_text: string
+        }
+        Update: {
+          case_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          model_used?: string | null
+          processing_time?: number | null
+          response_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_responses_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attachments: {
+        Row: {
+          case_id: string
+          content_type: string | null
+          created_at: string
+          file_size: number | null
+          file_url: string | null
+          filename: string
+          id: string
+        }
+        Insert: {
+          case_id: string
+          content_type?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_url?: string | null
+          filename: string
+          id?: string
+        }
+        Update: {
+          case_id?: string
+          content_type?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_url?: string | null
+          filename?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
