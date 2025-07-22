@@ -2,41 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Sistema de Design Profissional para Análise de Casos com IA */
 
 @layer base {
   :root {
+    /* Paleta principal - Azul profissional com tons modernos */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 16% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 16% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 16% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Azul corporativo moderno */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 217 91% 55%;
+    --primary-light: 217 91% 75%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Cinza neutro elegante */
+    --secondary: 215 16% 47%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 16% 95%;
+    --muted-foreground: 215 16% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Verde para sucesso */
+    --success: 152 81% 46%;
+    --success-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Laranja para alertas */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --accent: 217 91% 95%;
+    --accent-foreground: 217 91% 60%;
 
-    --radius: 0.5rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 215 16% 88%;
+    --input: 215 16% 88%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gradientes elegantes */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 75%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(215 16% 95%) 0%, hsl(215 16% 88%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(152 81% 46%) 0%, hsl(152 81% 56%) 100%);
+    
+    /* Sombras profissionais */
+    --shadow-sm: 0 1px 2px 0 hsl(215 16% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(215 16% 15% / 0.1), 0 2px 4px -1px hsl(215 16% 15% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(215 16% 15% / 0.1), 0 4px 6px -2px hsl(215 16% 15% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(215 16% 15% / 0.1), 0 10px 10px -5px hsl(215 16% 15% / 0.04);
+    
+    /* Transições suaves */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -91,6 +117,30 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+/* Utilities adicionais */
+@layer utilities {
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 }
 

@@ -1,73 +1,258 @@
-# Welcome to your Lovable project
+# 🤖 IA Legal - Sistema de Análise Inteligente de Casos
 
-## Project info
+Uma plataforma moderna de análise de documentos legais com Inteligência Artificial, desenvolvida com React, TypeScript e Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/cb087bd8-ac68-4b8c-98cc-51be5faa12fe
+## 🎯 Visão Geral
 
-## How can I edit this code?
+O **IA Legal** é uma aplicação frontend completa que demonstra como seria um sistema de análise de documentos legais utilizando IA. O projeto inclui autenticação, dashboard de casos, upload de arquivos e simulação de processamento por IA.
 
-There are several ways of editing your application.
+## ✨ Funcionalidades
 
-**Use Lovable**
+### 🔐 Autenticação
+- **Login**: Sistema de login com validação
+- **Registro**: Criação de conta com validações robustas
+- **Credenciais de Demo**: `demo@email.com` / `123456`
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/cb087bd8-ac68-4b8c-98cc-51be5faa12fe) and start prompting.
+### 📊 Dashboard
+- **Lista de Casos**: Visualização de todos os casos do usuário
+- **Estatísticas**: Contadores de casos pendentes, processando e concluídos
+- **Busca e Filtros**: Sistema de busca em tempo real
+- **Cards Responsivos**: Interface adaptável para mobile e desktop
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📄 Gerenciamento de Casos
+- **Novo Caso**: Formulário para criação de casos
+- **Upload de Arquivos**: 
+  - Suporte a múltiplos arquivos (PDF, DOC, DOCX, TXT, imagens)
+  - Validação de tamanho (máx. 10MB por arquivo)
+  - Preview de arquivos selecionados
+- **Status em Tempo Real**: Acompanhamento do processamento
+- **Detalhes**: Modal completo com informações e timeline
 
-**Use your preferred IDE**
+### 🤖 Simulação de IA
+- **Processamento Simulado**: Estados de pending → processing → completed
+- **Respostas da IA**: Análises detalhadas dos documentos
+- **Timeline**: Histórico de ações do caso
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Stack Tecnológica
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Frontend
+- **React 18** com TypeScript
+- **Vite** para build e desenvolvimento
+- **Tailwind CSS** para styling
+- **shadcn/ui** para componentes
+- **Lucide React** para ícones
+- **React Router** para navegação
+- **date-fns** para manipulação de datas
 
-Follow these steps:
+### Arquitetura Backend (Recomendada)
+```
+📦 Backend Sugerido
+├── Node.js + Express
+├── PostgreSQL (banco de dados)
+├── JWT + bcrypt (autenticação)
+├── AWS S3 ou MinIO (storage)
+├── n8n (automação e IA)
+└── Docker (containerização)
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🚀 Como Executar
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 1. Clonar o Repositório
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd ia-legal
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Instalar Dependências
+```bash
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Executar em Desenvolvimento
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### 4. Acessar a Aplicação
+```
+http://localhost:8080
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 5. Fazer Login
+Use as credenciais de demonstração:
+- **Email**: `demo@email.com`
+- **Senha**: `123456`
 
-**Use GitHub Codespaces**
+## 🎨 Design System
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Paleta de Cores
+- **Primary**: `hsl(217 91% 60%)` - Azul corporativo
+- **Success**: `hsl(152 81% 46%)` - Verde para sucesso
+- **Warning**: `hsl(38 92% 50%)` - Laranja para alertas
+- **Destructive**: `hsl(0 84% 60%)` - Vermelho para erros
 
-## What technologies are used for this project?
+### Componentes Reutilizáveis
+- **Buttons**: Variações primary, secondary, outline, ghost
+- **Cards**: Layout consistente com hover effects
+- **Forms**: Inputs com validação e feedback visual
+- **Modals**: Dialogs responsivos com scroll areas
+- **Badges**: Status indicators com cores semânticas
 
-This project is built with:
+## 🔧 Integração com Backend
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Para conectar com backend real, recomendamos usar Supabase:
 
-## How can I deploy this project?
+1. **Clique no botão Supabase** no Lovable
+2. **Configure as tabelas**:
+   ```sql
+   -- Usuários
+   CREATE TABLE users (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     name TEXT NOT NULL,
+     email TEXT UNIQUE NOT NULL,
+     password_hash TEXT NOT NULL,
+     created_at TIMESTAMP DEFAULT NOW()
+   );
 
-Simply open [Lovable](https://lovable.dev/projects/cb087bd8-ac68-4b8c-98cc-51be5faa12fe) and click on Share -> Publish.
+   -- Casos
+   CREATE TABLE cases (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id UUID REFERENCES users(id),
+     title TEXT NOT NULL,
+     description TEXT NOT NULL,
+     status TEXT DEFAULT 'pending',
+     created_at TIMESTAMP DEFAULT NOW()
+   );
 
-## Can I connect a custom domain to my Lovable project?
+   -- Anexos
+   CREATE TABLE attachments (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     case_id UUID REFERENCES cases(id),
+     filename TEXT NOT NULL,
+     file_size INTEGER,
+     file_url TEXT,
+     created_at TIMESTAMP DEFAULT NOW()
+   );
 
-Yes, you can!
+   -- Respostas da IA
+   CREATE TABLE ai_responses (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     case_id UUID REFERENCES cases(id),
+     response_text TEXT NOT NULL,
+     created_at TIMESTAMP DEFAULT NOW()
+   );
+   ```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+3. **Configure RLS** (Row Level Security):
+   ```sql
+   ALTER TABLE cases ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE ai_responses ENABLE ROW LEVEL SECURITY;
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+   -- Políticas de acesso
+   CREATE POLICY "Users can view own cases" ON cases
+     FOR SELECT USING (auth.uid() = user_id);
+   ```
+
+## 🤖 Integração com n8n
+
+### Fluxo Recomendado:
+1. **Webhook Trigger**: Recebe dados do caso
+2. **Download Files**: Baixa arquivos do S3
+3. **AI Processing**: Processa com OpenAI/Claude
+4. **Database Update**: Atualiza status no PostgreSQL
+5. **Response**: Retorna resultado
+
+### Exemplo de Webhook n8n:
+```javascript
+// Node.js function no n8n
+const caseData = $input.all()[0].json;
+
+// Processar arquivos com IA
+const aiResponse = await processWithAI(caseData.attachments);
+
+// Atualizar banco
+await updateCase(caseData.caseId, {
+  status: 'completed',
+  ai_response: aiResponse
+});
+
+return { status: 'success', response: aiResponse };
+```
+
+## 📱 Responsividade
+
+- **Mobile First**: Design otimizado para dispositivos móveis
+- **Breakpoints**: sm (640px), md (768px), lg (1024px), xl (1280px)
+- **Touch Friendly**: Botões e áreas de toque adequados
+- **Progressive Enhancement**: Funciona sem JavaScript
+
+## 🔒 Segurança
+
+### Frontend
+- **Input Validation**: Validação de formulários
+- **File Validation**: Verificação de tipos e tamanhos
+- **XSS Protection**: Sanitização de dados
+
+### Backend (Recomendado)
+- **JWT Tokens**: Autenticação stateless
+- **bcrypt**: Hash de senhas
+- **CORS**: Configuração adequada
+- **Rate Limiting**: Proteção contra ataques
+- **HTTPS**: Comunicação segura
+
+## 🚢 Deploy
+
+### Lovable (Recomendado)
+1. Clique em **"Publish"** no Lovable
+2. Configure domínio personalizado se necessário
+
+### Outras Opções
+- **Vercel**: `npm run build && vercel deploy`
+- **Netlify**: `npm run build && netlify deploy`
+- **AWS S3 + CloudFront**: Para hosting estático
+
+## 📋 API Endpoints (Backend)
+
+```typescript
+// Autenticação
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/refresh
+
+// Casos
+GET /api/cases
+POST /api/cases
+GET /api/cases/:id
+PUT /api/cases/:id
+DELETE /api/cases/:id
+
+// Upload
+POST /api/upload/signed-url
+POST /api/cases/:id/submit
+
+// Webhook n8n
+POST /webhook/ia-case
+```
+
+## 🤝 Contribuindo
+
+1. Fork o projeto
+2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
+3. Commit: `git commit -m 'Adiciona nova funcionalidade'`
+4. Push: `git push origin feature/nova-funcionalidade`
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 🆘 Suporte
+
+- **Documentação**: [docs.lovable.dev](https://docs.lovable.dev)
+- **Discord**: [Lovable Community](https://discord.com/channels/1119885301872070706/1280461670979993613)
+- **Email**: suporte@ialegal.com
+
+---
+
+**Desenvolvido com ❤️ usando Lovable**
