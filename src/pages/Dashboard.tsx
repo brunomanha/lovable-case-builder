@@ -5,8 +5,9 @@ import { Header } from "@/components/layout/Header";
 import { CaseCard, Case } from "@/components/dashboard/CaseCard";
 import { NewCaseForm } from "@/components/forms/NewCaseForm";
 import { CaseDetailsModal } from "@/components/modals/CaseDetailsModal";
-import { Plus, Search, Filter, FileText, Clock, CheckCircle } from "lucide-react";
+import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardProps {
   user: {
@@ -17,57 +18,30 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
+interface DatabaseCase {
+  id: string;
+  title: string;
+  description: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  created_at: string;
+  updated_at: string;
+  attachments: { count: number }[];
+  ai_responses: { count: number }[];
+}
+
 export default function Dashboard({ user, onLogout }: DashboardProps) {
   const [cases, setCases] = useState<Case[]>([]);
   const [filteredCases, setFilteredCases] = useState<Case[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewCaseForm, setShowNewCaseForm] = useState(false);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Dados mock para demonstração
   useEffect(() => {
-    const mockCases: Case[] = [
-      {
-        id: "1",
-        title: "Análise de Contrato de Prestação de Serviços",
-        description: "Revisão de cláusulas contratuais e identificação de riscos legais",
-        status: "completed",
-        createdAt: new Date(2024, 0, 15, 14, 30),
-        attachmentsCount: 3,
-        aiResponse: "A análise do contrato identificou 5 pontos de atenção principais: 1) Cláusula de penalidade desproporcional (item 4.2), 2) Falta de definição clara de escopo (item 2.1), 3) Prazo de pagamento inadequado (item 5.3), 4) Ausência de cláusula de confidencialidade, 5) Responsabilidade civil mal definida. Recomenda-se revisão dos termos antes da assinatura."
-      },
-      {
-        id: "2",
-        title: "Due Diligence - Aquisição Empresarial",
-        description: "Verificação de documentos corporativos e compliance fiscal",
-        status: "processing",
-        createdAt: new Date(2024, 0, 22, 9, 15),
-        attachmentsCount: 12,
-      },
-      {
-        id: "3",
-        title: "Revisão de Política de Privacidade LGPD",
-        description: "Adequação à Lei Geral de Proteção de Dados",
-        status: "pending",
-        createdAt: new Date(2024, 0, 25, 16, 45),
-        attachmentsCount: 2,
-      },
-      {
-        id: "4",
-        title: "Análise de Acordo Trabalhista",
-        description: "Verificação de conformidade com CLT e convenções coletivas",
-        status: "completed",
-        createdAt: new Date(2024, 0, 10, 11, 20),
-        attachmentsCount: 5,
-        aiResponse: "O acordo trabalhista apresenta conformidade geral com a CLT. Pontos positivos: salário acima do piso da categoria, benefícios adequados, jornada regular. Atenção para: cláusula de banco de horas (verificar limite legal), adicional de periculosidade (confirmar atividade), e período de experiência (máximo 90 dias). Documento aprovado com ressalvas."
-      }
-    ];
-    setCases(mockCases);
-    setFilteredCases(mockCases);
+    loadCases();
   }, []);
 
-  // Filtrar casos conforme busca
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredCases(cases);
@@ -81,41 +55,175 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     }
   }, [searchTerm, cases]);
 
-  const handleNewCase = async (title: string, description: string, files: File[]) => {
-    const newCase: Case = {
-      id: `case-${Date.now()}`,
-      title,
-      description,
-      status: "pending",
-      createdAt: new Date(),
-      attachmentsCount: files.length,
-    };
+  const loadCases = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
 
-    setCases(prev => [newCase, ...prev]);
-    setShowNewCaseForm(false);
+      const response = await supabase.functions.invoke('get-cases', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
-    // Simular processamento
-    setTimeout(() => {
-      setCases(prev => prev.map(c => 
-        c.id === newCase.id ? { ...c, status: "processing" } : c
-      ));
-    }, 2000);
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
 
-    setTimeout(() => {
-      setCases(prev => prev.map(c => 
-        c.id === newCase.id ? { 
-          ...c, 
-          status: "completed",
-          aiResponse: "Análise concluída com sucesso. A IA processou todos os documentos e identificou os principais pontos relevantes. Consulte o relatório detalhado para mais informações."
-        } : c
-      ));
-    }, 8000);
+      if (response.data?.success && response.data.cases) {
+        const transformedCases: Case[] = response.data.cases.map((dbCase: DatabaseCase) => ({
+          id: dbCase.id,
+          title: dbCase.title,
+          description: dbCase.description,
+          status: dbCase.status === 'failed' ? 'error' : dbCase.status,
+          createdAt: new Date(dbCase.created_at),
+          attachmentsCount: dbCase.attachments?.[0]?.count || 0,
+          hasAiResponse: dbCase.ai_responses?.[0]?.count > 0
+        }));
+        setCases(transformedCases);
+        setFilteredCases(transformedCases);
+      } else {
+        setCases([]);
+        setFilteredCases([]);
+      }
+    } catch (error) {
+      console.error('Error loading cases:', error);
+      toast({
+        title: "Erro ao carregar casos",
+        description: "Não foi possível carregar os casos. Tente novamente.",
+        variant: "destructive",
+      });
+      setCases([]);
+      setFilteredCases([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewCase = (caseId: string) => {
-    const case_ = cases.find(c => c.id === caseId);
-    if (case_) {
-      setSelectedCase(case_);
+  const handleNewCase = async (title: string, description: string, files: File[]) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const caseData = {
+        title,
+        description,
+        attachments: files.map(file => ({
+          filename: file.name,
+          file_size: file.size,
+          content_type: file.type
+        }))
+      };
+
+      const response = await supabase.functions.invoke('create-case', {
+        body: caseData,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.success) {
+        toast({
+          title: "Caso criado com sucesso!",
+          description: "Seu caso foi criado e será processado em breve.",
+        });
+        setShowNewCaseForm(false);
+        loadCases();
+        
+        // Processar automaticamente após criar
+        setTimeout(() => {
+          handleProcessCase(response.data.case.id);
+        }, 1000);
+      } else {
+        throw new Error(response.data?.error || 'Erro ao criar caso');
+      }
+    } catch (error) {
+      console.error('Error creating case:', error);
+      toast({
+        title: "Erro ao criar caso",
+        description: "Não foi possível criar o caso. Tente novamente.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const handleProcessCase = async (caseId: string) => {
+    try {
+      const response = await supabase.functions.invoke('process-case', {
+        body: { caseId },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.success) {
+        toast({
+          title: "Processamento iniciado",
+          description: "O caso está sendo analisado pela IA.",
+        });
+        loadCases();
+      } else {
+        throw new Error(response.data?.error || 'Erro ao processar caso');
+      }
+    } catch (error) {
+      console.error('Error processing case:', error);
+      toast({
+        title: "Erro ao processar caso",
+        description: "Não foi possível processar o caso. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewCase = async (caseId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('get-cases', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.data?.success) {
+        const fullCase = response.data.case;
+        if (fullCase) {
+          const transformedCase: Case = {
+            id: fullCase.id,
+            title: fullCase.title,
+            description: fullCase.description,
+            status: fullCase.status === 'failed' ? 'error' : fullCase.status,
+            createdAt: new Date(fullCase.created_at),
+            attachmentsCount: fullCase.attachments?.length || 0,
+            aiResponse: fullCase.ai_responses?.[0]?.response_text
+          };
+          setSelectedCase(transformedCase);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading case details:', error);
+      // Fallback para caso local se não conseguir carregar detalhes
+      const case_ = cases.find(c => c.id === caseId);
+      if (case_) {
+        setSelectedCase(case_);
+      }
     }
   };
 
@@ -130,7 +238,8 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     const pending = cases.filter(c => c.status === "pending").length;
     const processing = cases.filter(c => c.status === "processing").length;
     const completed = cases.filter(c => c.status === "completed").length;
-    return { pending, processing, completed };
+    const failed = cases.filter(c => c.status === "error").length;
+    return { pending, processing, completed, failed };
   };
 
   const stats = getStatusStats();
@@ -144,6 +253,22 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             onSubmit={handleNewCase}
             onCancel={() => setShowNewCaseForm(false)}
           />
+        </main>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header user={user} onLogout={onLogout} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Carregando casos...</p>
+            </div>
+          </div>
         </main>
       </div>
     );
@@ -175,7 +300,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
           </div>
 
           {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/20 rounded-lg p-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-warning/20 rounded-lg">
@@ -211,6 +336,18 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                 </div>
               </div>
             </div>
+
+            <div className="bg-gradient-to-br from-destructive/10 to-destructive/5 border border-destructive/20 rounded-lg p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-destructive/20 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stats.failed}</p>
+                  <p className="text-sm text-muted-foreground">Falhas</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Busca e Filtros */}
@@ -238,15 +375,16 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                 case={case_}
                 onView={handleViewCase}
                 onDownload={handleDownloadCase}
+                onProcess={case_.status === 'pending' ? () => handleProcessCase(case_.id) : undefined}
               />
             ))}
           </div>
 
-          {filteredCases.length === 0 && (
+          {filteredCases.length === 0 && !loading && (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Nenhum caso encontrado
+                {searchTerm ? "Nenhum caso encontrado" : "Nenhum caso criado"}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {searchTerm ? "Tente ajustar sua busca" : "Crie seu primeiro caso para começar"}

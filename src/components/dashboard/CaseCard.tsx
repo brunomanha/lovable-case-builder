@@ -13,12 +13,14 @@ export interface Case {
   createdAt: Date;
   attachmentsCount: number;
   aiResponse?: string;
+  hasAiResponse?: boolean;
 }
 
 interface CaseCardProps {
   case: Case;
   onView: (caseId: string) => void;
   onDownload?: (caseId: string) => void;
+  onProcess?: () => void;
 }
 
 const statusConfig = {
@@ -44,7 +46,7 @@ const statusConfig = {
   },
 };
 
-export function CaseCard({ case: caseItem, onView, onDownload }: CaseCardProps) {
+export function CaseCard({ case: caseItem, onView, onDownload, onProcess }: CaseCardProps) {
   const status = statusConfig[caseItem.status];
   const StatusIcon = status.icon;
 
@@ -91,6 +93,16 @@ export function CaseCard({ case: caseItem, onView, onDownload }: CaseCardProps) 
             <Eye className="h-4 w-4 mr-2" />
             Visualizar
           </Button>
+          {caseItem.status === "pending" && onProcess && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onProcess}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Processar
+            </Button>
+          )}
           {caseItem.status === "completed" && onDownload && (
             <Button
               variant="outline"

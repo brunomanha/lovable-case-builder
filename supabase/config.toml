@@ -1,1 +1,10 @@
 project_id = "hvcfntuwyhgfbbdruihq"
+
+[functions.process-case]
+verify_jwt = false
+
+[functions.create-case]
+verify_jwt = true
+
+[functions.get-cases]
+verify_jwt = true
