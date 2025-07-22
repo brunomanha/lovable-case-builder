@@ -8,6 +8,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    watch: {
+      usePolling: true,
+      interval: 1000,
+      ignored: ['**/node_modules/**', '**/.git/**']
+    },
+    fs: {
+      strict: false
+    }
   },
   plugins: [
     react(),
@@ -19,4 +27,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    exclude: ['lovable-tagger']
+  }
 }));
