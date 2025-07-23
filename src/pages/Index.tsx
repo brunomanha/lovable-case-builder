@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AuthPage } from "./AuthPage";
+import AuthPage from "./AuthPage";
 import Dashboard from "./Dashboard";
 import { supabase } from "@/integrations/supabase/client";
 
