@@ -7,7 +7,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Brain, LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
+import iaraLogo from "@/assets/iara-logo.png";
 
 interface HeaderProps {
   user: {
@@ -32,15 +33,19 @@ export function Header({ user, onLogout }: HeaderProps) {
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-br from-primary to-primary-hover rounded-lg">
-              <Brain className="h-6 w-6 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-primary-hover p-1">
+              <img 
+                src={iaraLogo} 
+                alt="IARA Logo" 
+                className="w-full h-full object-contain rounded-md"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
-                IA Legal
+                IARA
               </h1>
               <p className="text-xs text-muted-foreground">
-                Análise Inteligente de Casos
+                Assistente Jurídica Inteligente
               </p>
             </div>
           </div>

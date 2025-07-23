@@ -44,10 +44,10 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
     <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
       <CardHeader className="space-y-1 pb-6">
         <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
-          Entrar na Plataforma
+          Entrar no IARA
         </CardTitle>
         <CardDescription className="text-center text-muted-foreground">
-          Acesse seu painel de análise de casos
+          Acesse sua assistente jurídica inteligente
         </CardDescription>
       </CardHeader>
       <CardContent>
