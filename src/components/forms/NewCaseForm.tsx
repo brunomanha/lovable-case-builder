@@ -23,14 +23,14 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     
-    // Validação de tamanho (10MB por arquivo)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validação de tamanho (50MB por arquivo)
+    const maxSize = 50 * 1024 * 1024; // 50MB
     const invalidFiles = selectedFiles.filter(file => file.size > maxSize);
     
     if (invalidFiles.length > 0) {
       toast({
         title: "Arquivos muito grandes",
-        description: `${invalidFiles.length} arquivo(s) excedem o limite de 10MB.`,
+        description: `${invalidFiles.length} arquivo(s) excedem o limite de 50MB.`,
         variant: "destructive",
       });
       return;
@@ -155,7 +155,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
 
           <div className="space-y-4">
             <Label className="text-sm font-medium">
-              Anexos * (máx. 10MB por arquivo)
+              Anexos * (máx. 50MB por arquivo)
             </Label>
             
             <div
