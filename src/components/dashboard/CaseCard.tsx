@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download } from "lucide-react";
+import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download, Trash2, Play } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -18,9 +18,10 @@ export interface Case {
 
 interface CaseCardProps {
   case: Case;
-  onView: (caseId: string) => void;
-  onDownload?: (caseId: string) => void;
-  onProcess?: () => void;
+  onProcessCase: (id: string) => void;
+  onViewCase: (id: string) => void;
+  onDownloadCase: (id: string) => void;
+  onDeleteCase?: (id: string) => void;
 }
 
 const statusConfig = {
@@ -46,7 +47,7 @@ const statusConfig = {
   },
 };
 
-export function CaseCard({ case: caseItem, onView, onDownload, onProcess }: CaseCardProps) {
+export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownloadCase, onDeleteCase }: CaseCardProps) {
   const status = statusConfig[caseItem.status];
   const StatusIcon = status.icon;
 
@@ -87,30 +88,44 @@ export function CaseCard({ case: caseItem, onView, onDownload, onProcess }: Case
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onView(caseItem.id)}
+            onClick={() => onViewCase(caseItem.id)}
             className="flex-1 group-hover:border-primary/30 transition-colors"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            Visualizar
+            <Eye className="h-4 w-4 mr-1" />
+            Ver Detalhes
           </Button>
-          {caseItem.status === "pending" && onProcess && (
+          
+          {caseItem.status === "pending" && (
             <Button
-              variant="default"
               size="sm"
-              onClick={onProcess}
-              className="bg-primary hover:bg-primary/90"
+              onClick={() => onProcessCase(caseItem.id)}
+              className="flex-1 bg-gradient-to-r from-primary to-primary-hover"
             >
+              <Play className="h-4 w-4 mr-1" />
               Processar
             </Button>
           )}
-          {caseItem.status === "completed" && onDownload && (
+          
+          {caseItem.status === "completed" && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDownload(caseItem.id)}
-              className="group-hover:border-primary/30 transition-colors"
+              onClick={() => onDownloadCase(caseItem.id)}
+              className="flex-1 group-hover:border-primary/30 transition-colors"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4 mr-1" />
+              Download
+            </Button>
+          )}
+
+          {onDeleteCase && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDeleteCase(caseItem.id)}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>

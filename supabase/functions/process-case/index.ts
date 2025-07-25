@@ -23,7 +23,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
 
     // Create user-scoped client for authorization check
     const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -90,39 +90,37 @@ serve(async (req) => {
     let modelUsed = 'mock';
     const startTime = Date.now();
 
-    if (openaiApiKey) {
-      // Usar OpenAI se a chave estiver disponível
-      const prompt = `
-Analise o seguinte caso e forneça uma resposta detalhada:
+    // Carregar prompt padrão personalizado
+    const defaultPrompt = await getDefaultPrompt();
+
+    if (deepseekApiKey) {
+      // Usar DeepSeek se a chave estiver disponível
+      const prompt = `${defaultPrompt}
+
+CASO PARA ANÁLISE:
 
 TÍTULO: ${caseData.title}
 DESCRIÇÃO: ${caseData.description}
 
 Anexos: ${caseData.attachments?.length || 0} arquivo(s) anexado(s).
 
-Por favor, forneça:
-1. Resumo do caso
-2. Análise técnica detalhada
-3. Recomendações ou próximos passos
-4. Considerações importantes
-
-Seja detalhado e profissional na sua análise.
+Por favor, analise este caso seguindo as diretrizes estabelecidas.
       `;
 
-      console.log('Enviando para OpenAI...');
+      console.log('Enviando para DeepSeek...');
       
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
+          'Authorization': `Bearer ${deepseekApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'deepseek-chat',
           messages: [
             { 
               role: 'system', 
-              content: 'Você é um assistente especializado em análise de casos técnicos. Forneça análises detalhadas e profissionais.' 
+              content: defaultPrompt
             },
             { role: 'user', content: prompt }
           ],
@@ -131,17 +129,18 @@ Seja detalhado e profissional na sua análise.
         }),
       });
 
-      if (!openaiResponse.ok) {
-        throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
+      if (!deepseekResponse.ok) {
+        throw new Error(`DeepSeek API error: ${deepseekResponse.statusText}`);
       }
 
-      const openaiData = await openaiResponse.json();
-      aiResponse = openaiData.choices[0].message.content;
-      modelUsed = 'gpt-4o-mini';
+      const deepseekData = await deepseekResponse.json();
+      aiResponse = deepseekData.choices[0].message.content;
+      modelUsed = 'deepseek-chat';
       
     } else {
       // Usar resposta mock se não houver chave da API
-      aiResponse = `
+      aiResponse = `${defaultPrompt}
+
 ## Análise do Caso: ${caseData.title}
 
 ### Resumo
@@ -162,10 +161,25 @@ Este caso foi recebido e está sendo processado pelo sistema de análise de IA.
 - Validação das informações fornecidas
 - Elaboração de plano de ação específico
 
-*Nota: Esta é uma resposta de demonstração. Configure sua chave de API da OpenAI para obter análises completas com IA.*
+*Nota: Esta é uma resposta de demonstração. Configure sua chave de API do DeepSeek para obter análises completas com IA.*
       `;
       modelUsed = 'mock-ai';
     }
+
+// Função para obter prompt padrão
+async function getDefaultPrompt() {
+  return `Você é um assistente especializado em análise de documentos e casos técnicos.
+
+Por favor, analise cuidadosamente o caso apresentado e forneça:
+
+1. **Resumo Executivo**: Síntese clara dos pontos principais
+2. **Análise Detalhada**: Exame técnico aprofundado dos documentos
+3. **Principais Achados**: Pontos críticos identificados
+4. **Recomendações**: Próximos passos sugeridos
+5. **Considerações Importantes**: Alertas e observações relevantes
+
+Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`;
+}
 
     const processingTime = Date.now() - startTime;
 
@@ -177,7 +191,7 @@ Este caso foi recebido e está sendo processado pelo sistema de análise de IA.
         response_text: aiResponse,
         model_used: modelUsed,
         processing_time: processingTime,
-        confidence_score: openaiApiKey ? 0.85 : 0.60
+        confidence_score: deepseekApiKey ? 0.85 : 0.60
       });
 
     if (responseError) {

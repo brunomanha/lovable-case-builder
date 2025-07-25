@@ -188,7 +188,43 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
             Fechar
           </Button>
           {caseItem.status === "completed" && (
-            <Button className="flex-1 bg-gradient-to-r from-primary to-primary-hover">
+            <Button 
+              className="flex-1 bg-gradient-to-r from-primary to-primary-hover"
+              onClick={() => {
+                // Criar conteúdo do relatório
+                const reportContent = `RELATÓRIO DE ANÁLISE - CASO ${caseItem.id}
+
+=================================================
+INFORMAÇÕES GERAIS
+=================================================
+Título: ${caseItem.title}
+Descrição: ${caseItem.description}
+Status: ${caseItem.status}
+Data de Criação: ${caseItem.createdAt.toLocaleDateString('pt-BR')}
+Anexos: ${caseItem.attachmentsCount} arquivo(s)
+
+=================================================
+ANÁLISE DA IA
+=================================================
+${caseItem.aiResponse || 'Análise ainda não disponível.'}
+
+=================================================
+Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
+Sistema IARA - Análise Inteligente de Casos
+=================================================`;
+
+                // Criar e baixar arquivo
+                const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `relatorio-caso-${caseItem.id.slice(0, 8)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              }}
+            >
               <Download className="mr-2 h-4 w-4" />
               Baixar Relatório
             </Button>

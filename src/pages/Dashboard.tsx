@@ -35,6 +35,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewCaseForm, setShowNewCaseForm] = useState(false);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -225,11 +226,82 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
-  const handleDownloadCase = (caseId: string) => {
-    toast({
-      title: "Download iniciado",
-      description: "O relatório será baixado em breve.",
-    });
+  const handleDeleteCase = async (caseId: string) => {
+    try {
+      const { error } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', caseId);
+
+      if (error) throw error;
+
+      // Atualizar a lista local
+      setCases(prev => prev.filter(c => c.id !== caseId));
+      
+      toast({
+        title: "Caso excluído",
+        description: "O caso foi removido com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting case:', error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível remover o caso.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadCase = async (caseId: string) => {
+    try {
+      const case_ = cases.find(c => c.id === caseId);
+      if (!case_) return;
+
+      // Criar conteúdo do relatório
+      const reportContent = `RELATÓRIO DE ANÁLISE - CASO ${case_.id}
+
+=================================================
+INFORMAÇÕES GERAIS
+=================================================
+Título: ${case_.title}
+Descrição: ${case_.description}
+Status: ${case_.status}
+Data de Criação: ${case_.createdAt.toLocaleDateString('pt-BR')}
+Anexos: ${case_.attachmentsCount} arquivo(s)
+
+=================================================
+ANÁLISE DA IA
+=================================================
+${case_.aiResponse || 'Análise ainda não disponível.'}
+
+=================================================
+Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
+Sistema IARA - Análise Inteligente de Casos
+=================================================`;
+
+      // Criar e baixar arquivo
+      const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-caso-${case_.id.slice(0, 8)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download concluído",
+        description: "O relatório foi baixado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error downloading case:', error);
+      toast({
+        title: "Erro no download",
+        description: "Não foi possível baixar o relatório.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusStats = () => {
@@ -245,7 +317,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   if (showNewCaseForm) {
     return (
       <div className="min-h-screen bg-background">
-        <Header user={user} onLogout={onLogout} />
+        <Header user={user} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} />
         <main className="container mx-auto px-4 py-8">
           <NewCaseForm
             onSubmit={handleNewCase}
@@ -258,9 +330,9 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header user={user} onLogout={onLogout} />
-        <main className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <Header user={user} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} />
+      <main className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>

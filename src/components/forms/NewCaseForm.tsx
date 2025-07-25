@@ -20,12 +20,10 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    
+  const validateAndAddFiles = (fileList: File[]) => {
     // Validação de tamanho (50MB por arquivo)
     const maxSize = 50 * 1024 * 1024; // 50MB
-    const invalidFiles = selectedFiles.filter(file => file.size > maxSize);
+    const invalidFiles = fileList.filter(file => file.size > maxSize);
     
     if (invalidFiles.length > 0) {
       toast({
@@ -38,7 +36,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
 
     // Validação de extensões permitidas
     const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png', '.gif'];
-    const invalidExtensions = selectedFiles.filter(file => {
+    const invalidExtensions = fileList.filter(file => {
       const extension = '.' + file.name.split('.').pop()?.toLowerCase();
       return !allowedExtensions.includes(extension);
     });
@@ -52,12 +50,21 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
       return;
     }
 
-    setFiles(prev => [...prev, ...selectedFiles]);
+    setFiles(prev => [...prev, ...fileList]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    validateAndAddFiles(selectedFiles);
     
     // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleFilesDrop = (droppedFiles: File[]) => {
+    validateAndAddFiles(droppedFiles);
   };
 
   const removeFile = (index: number) => {
@@ -162,6 +169,26 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
             <div
               className="border-2 border-dashed border-border hover:border-primary/50 rounded-lg p-8 text-center cursor-pointer transition-colors"
               onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.add('border-primary', 'bg-primary/5');
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+                
+                const droppedFiles = Array.from(e.dataTransfer.files);
+                if (droppedFiles.length > 0) {
+                  handleFilesDrop(droppedFiles);
+                }
+              }}
             >
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">

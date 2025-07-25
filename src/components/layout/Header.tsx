@@ -16,9 +16,10 @@ interface HeaderProps {
     email: string;
   };
   onLogout: () => void;
+  onOpenSettings?: () => void;
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
+export function Header({ user, onLogout, onOpenSettings }: HeaderProps) {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -73,10 +74,12 @@ export function Header({ user, onLogout }: HeaderProps) {
               <User className="mr-2 h-4 w-4" />
               Perfil
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              Configurações
-            </DropdownMenuItem>
+            {onOpenSettings && (
+              <DropdownMenuItem className="cursor-pointer" onClick={onOpenSettings}>
+                <Settings className="mr-2 h-4 w-4" />
+                Configurações
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
