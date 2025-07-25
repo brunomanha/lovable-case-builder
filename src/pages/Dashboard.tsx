@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { CaseCard, Case } from "@/components/dashboard/CaseCard";
 import { NewCaseForm } from "@/components/forms/NewCaseForm";
 import { CaseDetailsModal } from "@/components/modals/CaseDetailsModal";
+import { SettingsModal } from "@/components/modals/SettingsModal";
 import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -346,7 +347,7 @@ Sistema IARA - Análise Inteligente de Casos
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={onLogout} />
+      <Header user={user} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
@@ -443,9 +444,9 @@ Sistema IARA - Análise Inteligente de Casos
               <CaseCard
                 key={case_.id}
                 case={case_}
+                onProcessCase={handleProcessCase}
                 onViewCase={handleViewCase}
                 onDownloadCase={handleDownloadCase}
-                onProcessCase={handleProcessCase}
                 onDeleteCase={handleDeleteCase}
               />
             ))}
@@ -481,6 +482,12 @@ Sistema IARA - Análise Inteligente de Casos
           onClose={() => setSelectedCase(null)}
         />
       )}
+
+      {/* Modal de configurações */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </div>
   );
 }
