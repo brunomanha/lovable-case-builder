@@ -112,11 +112,18 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      // Por enquanto, criar caso sem anexos até implementarmos upload de arquivos
+      // Preparar dados dos anexos para upload
+      const attachments = files.map(file => ({
+        filename: file.name,
+        file_size: file.size,
+        content_type: file.type,
+        file_url: '' // Será preenchido após o upload se necessário
+      }));
+
       const caseData = {
         title,
         description,
-        attachments: [] // Removido temporariamente até implementar upload
+        attachments
       };
 
       const response = await supabase.functions.invoke('create-case', {
