@@ -19,12 +19,22 @@ serve(async (req) => {
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
 
-    // Create user-scoped client - JWT verification is handled by the runtime
-    const userSupabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Get the Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Token de autorização não encontrado');
+    }
 
-    // Get user from JWT (automatically verified by runtime)
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+    // Create user-scoped client with the user's token
+    const token = authHeader.replace('Bearer ', '');
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Get user from the token
+    const { data: { user }, error: authError } = await userSupabase.auth.getUser(token);
     if (authError || !user) {
+      console.error('Auth error:', authError);
       throw new Error('Usuário não autenticado');
     }
 
