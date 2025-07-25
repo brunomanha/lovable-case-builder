@@ -20,9 +20,22 @@ serve(async (req) => {
     // Create Supabase client - JWT verification is handled by the runtime
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Get user from JWT (automatically verified by runtime)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get the Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Token de autorização não encontrado');
+    }
+
+    // Create Supabase client with the user's token
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseWithAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Get user from the token
+    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser(token);
     if (authError || !user) {
+      console.error('Auth error:', authError);
       throw new Error('Usuário não autenticado');
     }
 
@@ -69,7 +82,7 @@ serve(async (req) => {
     console.log(`Criando caso para usuário: ${user.id}`);
 
     // Criar o caso
-    const { data: caseData, error: caseError } = await supabase
+    const { data: caseData, error: caseError } = await supabaseWithAuth
       .from('cases')
       .insert({
         title,
@@ -94,7 +107,7 @@ serve(async (req) => {
         content_type: attachment.content_type
       }));
 
-      const { error: attachmentError } = await supabase
+      const { error: attachmentError } = await supabaseWithAuth
         .from('attachments')
         .insert(attachmentData);
 
