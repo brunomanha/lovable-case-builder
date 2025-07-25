@@ -9,27 +9,111 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, Bot, Key, Zap } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type AIProvider = 'openrouter' | 'openai' | 'anthropic' | 'deepseek' | 'groq';
+
+interface AIConfig {
+  provider: AIProvider;
+  apiKey: string;
+  model: string;
+  temperature: number;
+  maxTokens: number;
+}
+
+const AI_PROVIDERS = {
+  openrouter: {
+    name: 'OpenRouter',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    models: {
+      free: [
+        { id: 'google/gemma-7b-it:free', name: 'Gemma 7B (Gratuito)', description: 'Modelo gratuito do Google' },
+        { id: 'microsoft/phi-3-mini-128k-instruct:free', name: 'Phi-3 Mini (Gratuito)', description: 'Modelo gratuito da Microsoft' },
+        { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (Gratuito)', description: 'Modelo gratuito da Mistral' },
+        { id: 'huggingfaceh4/zephyr-7b-beta:free', name: 'Zephyr 7B (Gratuito)', description: 'Modelo gratuito da HuggingFace' },
+        { id: 'openchat/openchat-7b:free', name: 'OpenChat 7B (Gratuito)', description: 'Modelo gratuito do OpenChat' },
+        { id: 'gryphe/mythomist-7b:free', name: 'Mythomist 7B (Gratuito)', description: 'Modelo gratuito especializado' }
+      ],
+      premium: [
+        { id: 'openai/gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Modelo avançado da OpenAI' },
+        { id: 'openai/gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Modelo popular da OpenAI' },
+        { id: 'anthropic/claude-3-haiku', name: 'Claude 3 Haiku', description: 'Modelo rápido da Anthropic' },
+        { id: 'anthropic/claude-3-sonnet', name: 'Claude 3 Sonnet', description: 'Modelo balanceado da Anthropic' },
+        { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus', description: 'Modelo mais avançado da Anthropic' },
+        { id: 'meta-llama/llama-3-70b-instruct', name: 'Llama 3 70B', description: 'Modelo da Meta' },
+        { id: 'google/gemini-pro', name: 'Gemini Pro', description: 'Modelo avançado do Google' }
+      ]
+    }
+  },
+  openai: {
+    name: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    models: [
+      { id: 'gpt-4', name: 'GPT-4', description: 'Modelo mais avançado' },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Versão otimizada' },
+      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Rápido e eficiente' }
+    ]
+  },
+  anthropic: {
+    name: 'Anthropic',
+    baseUrl: 'https://api.anthropic.com/v1',
+    models: [
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Mais avançado' },
+      { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanceado' },
+      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Rápido' }
+    ]
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    baseUrl: 'https://api.deepseek.com/v1',
+    models: [
+      { id: 'deepseek-chat', name: 'DeepSeek Chat', description: 'Modelo de chat' },
+      { id: 'deepseek-coder', name: 'DeepSeek Coder', description: 'Especializado em código' }
+    ]
+  },
+  groq: {
+    name: 'Groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    models: [
+      { id: 'llama-3.1-405b-reasoning', name: 'Llama 3.1 405B', description: 'Modelo mais avançado' },
+      { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B', description: 'Versátil' },
+      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', description: 'Modelo eficiente' }
+    ]
+  }
+};
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [defaultPrompt, setDefaultPrompt] = useState("");
+  const [aiConfig, setAiConfig] = useState<AIConfig>({
+    provider: 'openrouter',
+    apiKey: '',
+    model: 'google/gemma-7b-it:free',
+    temperature: 0.7,
+    maxTokens: 2048
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Carregar prompt salvo do localStorage
-    const savedPrompt = localStorage.getItem("default-ai-prompt");
-    if (savedPrompt) {
-      setDefaultPrompt(savedPrompt);
-    } else {
-      // Prompt padrão
-      setDefaultPrompt(`Você é um assistente especializado em análise de documentos e casos técnicos.
+    if (isOpen) {
+      // Carregar configurações salvas do localStorage
+      const savedPrompt = localStorage.getItem("default-ai-prompt");
+      const savedConfig = localStorage.getItem("ai-config");
+      
+      if (savedPrompt) {
+        setDefaultPrompt(savedPrompt);
+      } else {
+        setDefaultPrompt(`Você é um assistente especializado em análise de documentos e casos técnicos.
 
 Por favor, analise cuidadosamente o caso apresentado e forneça:
 
@@ -40,18 +124,35 @@ Por favor, analise cuidadosamente o caso apresentado e forneça:
 5. **Considerações Importantes**: Alertas e observações relevantes
 
 Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`);
+      }
+
+      if (savedConfig) {
+        setAiConfig(JSON.parse(savedConfig));
+      }
     }
   }, [isOpen]);
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Salvar no localStorage
+      // Validar se API key foi fornecida
+      if (!aiConfig.apiKey.trim()) {
+        toast({
+          title: "API Key obrigatória",
+          description: "Por favor, forneça uma API Key válida.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Salvar configurações no localStorage
       localStorage.setItem("default-ai-prompt", defaultPrompt.trim());
+      localStorage.setItem("ai-config", JSON.stringify(aiConfig));
       
       toast({
         title: "Configurações salvas",
-        description: "O prompt padrão foi atualizado com sucesso.",
+        description: "Todas as configurações foram atualizadas com sucesso.",
       });
       
       onClose();
@@ -79,43 +180,231 @@ Por favor, analise cuidadosamente o caso apresentado e forneça:
 5. **Considerações Importantes**: Alertas e observações relevantes
 
 Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`);
+    
+    setAiConfig({
+      provider: 'openrouter',
+      apiKey: '',
+      model: 'google/gemma-7b-it:free',
+      temperature: 0.7,
+      maxTokens: 2048
+    });
+  };
+
+  const getCurrentModels = () => {
+    const provider = AI_PROVIDERS[aiConfig.provider];
+    if (aiConfig.provider === 'openrouter') {
+      const openrouterProvider = provider as typeof AI_PROVIDERS.openrouter;
+      return [...openrouterProvider.models.free, ...openrouterProvider.models.premium];
+    }
+    return provider.models as Array<{ id: string; name: string; description: string; }>;
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             Configurações do Sistema
           </DialogTitle>
           <DialogDescription>
-            Configure o comportamento padrão da IA para análise de casos
+            Configure serviços de IA e comportamento padrão para análise de casos
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          <div className="space-y-3">
-            <Label htmlFor="defaultPrompt" className="text-sm font-medium">
-              Prompt Padrão da IA
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Este prompt será usado automaticamente em todas as análises de casos. 
-              Personalize para adequar ao seu tipo de trabalho específico.
-            </p>
-            <Textarea
-              id="defaultPrompt"
-              value={defaultPrompt}
-              onChange={(e) => setDefaultPrompt(e.target.value)}
-              className="min-h-[300px] resize-none"
-              placeholder="Digite o prompt padrão que a IA deve usar..."
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Caracteres: {defaultPrompt.length}
-            </p>
-          </div>
-        </div>
+        <Tabs defaultValue="ai-services" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="ai-services" className="flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              Serviços de IA
+            </TabsTrigger>
+            <TabsTrigger value="prompt" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Prompt Padrão
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="ai-services" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="h-5 w-5" />
+                  Configuração do Provedor de IA
+                </CardTitle>
+                <CardDescription>
+                  Selecione e configure seu provedor de IA preferido
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="provider">Provedor de IA</Label>
+                    <Select
+                      value={aiConfig.provider}
+                      onValueChange={(value: AIProvider) => {
+                        const newProvider = value;
+                        let defaultModel = '';
+                        
+                        if (newProvider === 'openrouter') {
+                          defaultModel = 'google/gemma-7b-it:free';
+                        } else {
+                          defaultModel = AI_PROVIDERS[newProvider].models[0].id;
+                        }
+                        
+                        setAiConfig({
+                          ...aiConfig,
+                          provider: newProvider,
+                          model: defaultModel
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o provedor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
+                          <SelectItem key={key} value={key}>
+                            {provider.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="model">Modelo</Label>
+                    <Select
+                      value={aiConfig.model}
+                      onValueChange={(value) => setAiConfig({ ...aiConfig, model: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {aiConfig.provider === 'openrouter' && (
+                          <>
+                            <div className="px-2 py-1 text-sm font-semibold text-green-600">
+                              🆓 Modelos Gratuitos
+                            </div>
+                            {AI_PROVIDERS.openrouter.models.free.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>
+                                <div className="flex flex-col">
+                                  <span>{model.name}</span>
+                                  <span className="text-xs text-muted-foreground">{model.description}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            <div className="px-2 py-1 text-sm font-semibold text-blue-600">
+                              💰 Modelos Premium
+                            </div>
+                            {AI_PROVIDERS.openrouter.models.premium.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>
+                                <div className="flex flex-col">
+                                  <span>{model.name}</span>
+                                  <span className="text-xs text-muted-foreground">{model.description}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                        {aiConfig.provider !== 'openrouter' && 
+                          getCurrentModels().map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              <div className="flex flex-col">
+                                <span>{model.name}</span>
+                                <span className="text-xs text-muted-foreground">{model.description}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="apiKey">API Key</Label>
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    value={aiConfig.apiKey}
+                    onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
+                    placeholder="Cole sua API key aqui..."
+                    className="font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {aiConfig.provider === 'openrouter' && 'Obtenha sua API key em: https://openrouter.ai/keys'}
+                    {aiConfig.provider === 'openai' && 'Obtenha sua API key em: https://platform.openai.com/api-keys'}
+                    {aiConfig.provider === 'anthropic' && 'Obtenha sua API key em: https://console.anthropic.com/'}
+                    {aiConfig.provider === 'deepseek' && 'Obtenha sua API key em: https://platform.deepseek.com/'}
+                    {aiConfig.provider === 'groq' && 'Obtenha sua API key em: https://console.groq.com/keys'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="temperature">
+                      Temperatura: {aiConfig.temperature}
+                    </Label>
+                    <input
+                      type="range"
+                      id="temperature"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={aiConfig.temperature}
+                      onChange={(e) => setAiConfig({ ...aiConfig, temperature: parseFloat(e.target.value) })}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Controla a criatividade (0 = mais preciso, 1 = mais criativo)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="maxTokens">Máximo de Tokens</Label>
+                    <Input
+                      id="maxTokens"
+                      type="number"
+                      min="256"
+                      max="8192"
+                      value={aiConfig.maxTokens}
+                      onChange={(e) => setAiConfig({ ...aiConfig, maxTokens: parseInt(e.target.value) })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Limite de tokens para a resposta (256 - 8192)
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prompt" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Prompt Padrão da IA</CardTitle>
+                <CardDescription>
+                  Este prompt será usado automaticamente em todas as análises de casos. 
+                  Personalize para adequar ao seu tipo de trabalho específico.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  id="defaultPrompt"
+                  value={defaultPrompt}
+                  onChange={(e) => setDefaultPrompt(e.target.value)}
+                  className="min-h-[400px] resize-none"
+                  placeholder="Digite o prompt padrão que a IA deve usar..."
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Caracteres: {defaultPrompt.length}
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <div className="flex gap-3 pt-4 border-t">
           <Button 
