@@ -194,28 +194,35 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         body: { caseId },
       });
 
-      if (response.data?.success) {
+      if (response.data?.success && response.data.case) {
         const fullCase = response.data.case;
-        if (fullCase) {
-          const transformedCase: Case = {
-            id: fullCase.id,
-            title: fullCase.title,
-            description: fullCase.description,
-            status: fullCase.status === 'failed' ? 'error' : fullCase.status,
-            createdAt: new Date(fullCase.created_at),
-            attachmentsCount: fullCase.attachments?.length || 0,
-            aiResponse: fullCase.ai_responses?.[0]?.response_text
-          };
-          setSelectedCase(transformedCase);
+        const transformedCase: Case = {
+          id: fullCase.id,
+          title: fullCase.title,
+          description: fullCase.description,
+          status: fullCase.status === 'failed' ? 'error' : fullCase.status,
+          createdAt: new Date(fullCase.created_at),
+          attachmentsCount: fullCase.attachments?.length || 0,
+          aiResponse: fullCase.ai_responses?.[0]?.response_text,
+          hasAiResponse: (fullCase.ai_responses?.length || 0) > 0
+        };
+        setSelectedCase(transformedCase);
+      } else {
+        // Fallback para caso local se não conseguir carregar detalhes
+        const case_ = cases.find(c => c.id === caseId);
+        if (case_) {
+          setSelectedCase(case_);
+        } else {
+          throw new Error('Caso não encontrado');
         }
       }
     } catch (error) {
       console.error('Error loading case details:', error);
-      // Fallback para caso local se não conseguir carregar detalhes
-      const case_ = cases.find(c => c.id === caseId);
-      if (case_) {
-        setSelectedCase(case_);
-      }
+      toast({
+        title: "Erro ao carregar detalhes",
+        description: "Não foi possível carregar os detalhes do caso.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -247,25 +254,56 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
 
   const handleDownloadCase = async (caseId: string) => {
     try {
-      const case_ = cases.find(c => c.id === caseId);
-      if (!case_) return;
+      // Primeiro carregar os dados completos do caso
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('get-cases', {
+        body: { caseId },
+      });
+
+      let caseToDownload: Case;
+      
+      if (response.data?.success && response.data.case) {
+        const fullCase = response.data.case;
+        caseToDownload = {
+          id: fullCase.id,
+          title: fullCase.title,
+          description: fullCase.description,
+          status: fullCase.status === 'failed' ? 'error' : fullCase.status,
+          createdAt: new Date(fullCase.created_at),
+          attachmentsCount: fullCase.attachments?.length || 0,
+          aiResponse: fullCase.ai_responses?.[0]?.response_text,
+          hasAiResponse: (fullCase.ai_responses?.length || 0) > 0
+        };
+      } else {
+        // Fallback para caso local
+        const case_ = cases.find(c => c.id === caseId);
+        if (!case_) {
+          throw new Error('Caso não encontrado');
+        }
+        caseToDownload = case_;
+      }
 
       // Criar conteúdo do relatório
-      const reportContent = `RELATÓRIO DE ANÁLISE - CASO ${case_.id}
+      const reportContent = `RELATÓRIO DE ANÁLISE - CASO ${caseToDownload.id}
 
 =================================================
 INFORMAÇÕES GERAIS
 =================================================
-Título: ${case_.title}
-Descrição: ${case_.description}
-Status: ${case_.status}
-Data de Criação: ${case_.createdAt.toLocaleDateString('pt-BR')}
-Anexos: ${case_.attachmentsCount} arquivo(s)
+Título: ${caseToDownload.title}
+Descrição: ${caseToDownload.description}
+Status: ${caseToDownload.status}
+Data de Criação: ${caseToDownload.createdAt.toLocaleDateString('pt-BR')}
+Anexos: ${caseToDownload.attachmentsCount} arquivo(s)
 
 =================================================
 ANÁLISE DA IA
 =================================================
-${case_.aiResponse || 'Análise ainda não disponível.'}
+${caseToDownload.aiResponse || 'Análise ainda não disponível. O caso pode não ter sido processado pela IA ainda.'}
 
 =================================================
 Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
@@ -277,7 +315,7 @@ Sistema IARA - Análise Inteligente de Casos
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `relatorio-caso-${case_.id.slice(0, 8)}.txt`;
+      a.download = `relatorio-caso-${caseToDownload.id.slice(0, 8)}.txt`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

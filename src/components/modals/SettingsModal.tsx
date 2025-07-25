@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Bot, Key, Zap } from "lucide-react";
+import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsModalProps {
@@ -165,8 +165,10 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
     }
   };
 
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
+
   const handleSave = async () => {
-    setIsLoading(true);
     try {
       // Validar se API key foi fornecida
       if (!aiConfig.apiKey.trim()) {
@@ -269,6 +271,71 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!aiConfig.apiKey.trim()) {
+      toast({
+        title: "API Key obrigatória",
+        description: "Por favor, forneça uma API Key válida antes de testar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTestingConnection(true);
+    setTestResult(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('test-ai-connection', {
+        body: {
+          provider: aiConfig.provider,
+          apiKey: aiConfig.apiKey,
+          model: aiConfig.model
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      setTestResult(response.data);
+      
+      if (response.data.success) {
+        toast({
+          title: "Conexão bem-sucedida! ✅",
+          description: `${response.data.message} (${response.data.responseTime}ms)`,
+        });
+      } else {
+        toast({
+          title: "Falha na conexão ❌",
+          description: response.data.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro no teste de conexão:", error);
+      const errorResult = {
+        success: false,
+        message: `Erro no teste: ${error.message}`,
+        details: { error: error.message }
+      };
+      setTestResult(errorResult);
+      
+      toast({
+        title: "Erro no teste de conexão",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
@@ -479,6 +546,57 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                     {aiConfig.provider === 'deepseek' && 'Obtenha sua API key em: https://platform.deepseek.com/'}
                     {aiConfig.provider === 'groq' && 'Obtenha sua API key em: https://console.groq.com/keys'}
                   </p>
+                </div>
+
+                {/* Botão de Teste de Conexão */}
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleTestConnection}
+                    disabled={testingConnection || !aiConfig.apiKey.trim()}
+                    className="w-full"
+                  >
+                    {testingConnection ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Testando conexão...
+                      </>
+                    ) : (
+                      <>
+                        <TestTube className="h-4 w-4 mr-2" />
+                        Testar Conexão com IA
+                      </>
+                    )}
+                  </Button>
+                  
+                  {testResult && (
+                    <div className={`p-3 rounded-lg border ${
+                      testResult.success 
+                        ? 'bg-success/10 border-success/20 text-success-foreground' 
+                        : 'bg-destructive/10 border-destructive/20 text-destructive-foreground'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {testResult.success ? (
+                          <CheckCircle className="h-4 w-4 text-success" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        )}
+                        <span className="font-medium">
+                          {testResult.success ? 'Conexão bem-sucedida!' : 'Falha na conexão'}
+                        </span>
+                      </div>
+                      <p className="text-sm">{testResult.message}</p>
+                      {testResult.details && (
+                        <details className="mt-2">
+                          <summary className="text-xs cursor-pointer">Ver detalhes</summary>
+                          <pre className="text-xs mt-1 bg-background/50 p-2 rounded border overflow-auto">
+                            {JSON.stringify(testResult.details, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
