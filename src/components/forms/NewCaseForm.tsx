@@ -84,14 +84,15 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
       return;
     }
 
-    if (files.length === 0) {
-      toast({
-        title: "Nenhum arquivo selecionado",
-        description: "Adicione pelo menos um arquivo para análise.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Remover validação de arquivos obrigatórios até implementar upload
+    // if (files.length === 0) {
+    //   toast({
+    //     title: "Nenhum arquivo selecionado",
+    //     description: "Adicione pelo menos um arquivo para análise.",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
     setIsLoading(true);
     try {
@@ -155,7 +156,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
 
           <div className="space-y-4">
             <Label className="text-sm font-medium">
-              Anexos * (máx. 50MB por arquivo)
+              Anexos (opcional - máx. 50MB por arquivo)
             </Label>
             
             <div

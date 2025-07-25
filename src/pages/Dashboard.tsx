@@ -194,6 +194,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       }
 
       const response = await supabase.functions.invoke('get-cases', {
+        body: { caseId },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
