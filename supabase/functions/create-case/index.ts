@@ -14,21 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header
-    const authorization = req.headers.get('Authorization');
-    if (!authorization) {
-      throw new Error('Token de autorização obrigatório');
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Create Supabase client with user's token
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authorization } }
-    });
+    // Create Supabase client - JWT verification is handled by the runtime
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Verify user authentication
+    // Get user from JWT (automatically verified by runtime)
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       throw new Error('Usuário não autenticado');

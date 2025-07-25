@@ -66,11 +66,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await supabase.functions.invoke('get-cases', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await supabase.functions.invoke('get-cases');
 
       if (response.error) {
         throw new Error(response.error.message);
@@ -123,9 +119,6 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
       const response = await supabase.functions.invoke('create-case', {
         body: caseData,
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
       });
 
       if (response.error) {
@@ -197,9 +190,6 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
       const response = await supabase.functions.invoke('get-cases', {
         body: { caseId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
       });
 
       if (response.data?.success) {
