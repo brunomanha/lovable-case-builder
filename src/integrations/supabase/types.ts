@@ -52,6 +52,42 @@ export type Database = {
           },
         ]
       }
+      ai_settings: {
+        Row: {
+          api_key: string | null
+          created_at: string
+          id: string
+          max_tokens: number | null
+          model: string
+          provider: string
+          temperature: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string
+          id?: string
+          max_tokens?: number | null
+          model?: string
+          provider?: string
+          temperature?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string
+          id?: string
+          max_tokens?: number | null
+          model?: string
+          provider?: string
+          temperature?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           case_id: string
@@ -115,6 +151,30 @@ export type Database = {
           id?: string
           status?: string
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      default_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          prompt_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prompt_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prompt_text?: string
           updated_at?: string
           user_id?: string
         }

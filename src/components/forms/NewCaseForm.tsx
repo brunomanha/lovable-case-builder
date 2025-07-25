@@ -82,7 +82,11 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !description.trim()) {
+    // Input validation and sanitization
+    const sanitizedTitle = title.trim();
+    const sanitizedDescription = description.trim();
+    
+    if (!sanitizedTitle || !sanitizedDescription) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha título e descrição.",
@@ -91,19 +95,41 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
       return;
     }
 
-    // Remover validação de arquivos obrigatórios até implementar upload
-    // if (files.length === 0) {
-    //   toast({
-    //     title: "Nenhum arquivo selecionado",
-    //     description: "Adicione pelo menos um arquivo para análise.",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
+    if (sanitizedTitle.length < 3 || sanitizedTitle.length > 200) {
+      toast({
+        title: "Título inválido",
+        description: "O título deve ter entre 3 e 200 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (sanitizedDescription.length < 10 || sanitizedDescription.length > 5000) {
+      toast({
+        title: "Descrição inválida",
+        description: "A descrição deve ter entre 10 e 5000 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file attachments
+    const maxFileSize = 50 * 1024 * 1024; // 50MB (keeping existing limit)
+    
+    for (const file of files) {
+      if (file.size > maxFileSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `O arquivo ${file.name} é muito grande. Máximo: 50MB.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     setIsLoading(true);
     try {
-      await onSubmit(title.trim(), description.trim(), files);
+      await onSubmit(sanitizedTitle, sanitizedDescription, files);
       toast({
         title: "Caso criado com sucesso!",
         description: "Seu caso foi enviado para análise da IA.",

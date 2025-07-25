@@ -2,21 +2,25 @@ import { useState, useEffect } from "react";
 import AuthPage from "./AuthPage";
 import Dashboard from "./Dashboard";
 import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from '@supabase/supabase-js';
 
 const Index = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check current auth state
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
@@ -25,6 +29,7 @@ const Index = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setSession(null);
     setUser(null);
   };
 
@@ -47,6 +52,7 @@ const Index = () => {
         email: user.email || '',
         id: user.id
       }}
+      session={session}
       onLogout={handleLogout}
     />
   );

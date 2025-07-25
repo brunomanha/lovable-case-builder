@@ -23,10 +23,34 @@ export function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFormProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !password || !confirmPassword) {
+    // Input validation and sanitization
+    const sanitizedName = name.trim();
+    const sanitizedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const nameRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
+    
+    if (!sanitizedName || !sanitizedEmail || !password || !confirmPassword) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!nameRegex.test(sanitizedName)) {
+      toast({
+        title: "Nome inválido",
+        description: "O nome deve ter entre 2-50 caracteres e conter apenas letras.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!emailRegex.test(sanitizedEmail)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
         variant: "destructive",
       });
       return;
@@ -41,10 +65,24 @@ export function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFormProps)
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       toast({
         title: "Senha muito fraca",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        description: "A senha deve ter pelo menos 8 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for password complexity
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+      toast({
+        title: "Senha muito fraca",
+        description: "A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número.",
         variant: "destructive",
       });
       return;
@@ -52,7 +90,7 @@ export function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFormProps)
 
     setIsLoading(true);
     try {
-      await onRegister(name, email, password);
+      await onRegister(sanitizedName, sanitizedEmail, password);
     } catch (error) {
       console.error("Register error:", error);
     } finally {

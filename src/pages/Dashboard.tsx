@@ -9,6 +9,7 @@ import { SettingsModal } from "@/components/modals/SettingsModal";
 import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Session } from '@supabase/supabase-js';
 
 interface DashboardProps {
   user: {
@@ -16,6 +17,7 @@ interface DashboardProps {
     email: string;
     id: string;
   };
+  session: Session | null;
   onLogout: () => void;
 }
 
@@ -30,7 +32,7 @@ interface DatabaseCase {
   ai_responses: { count: number }[];
 }
 
-export default function Dashboard({ user, onLogout }: DashboardProps) {
+export default function Dashboard({ user, session, onLogout }: DashboardProps) {
   const [cases, setCases] = useState<Case[]>([]);
   const [filteredCases, setFilteredCases] = useState<Case[]>([]);
   const [searchTerm, setSearchTerm] = useState("");

@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Save, Bot, Key, Zap } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -106,12 +107,44 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   useEffect(() => {
     if (isOpen) {
-      // Carregar configurações salvas do localStorage
-      const savedPrompt = localStorage.getItem("default-ai-prompt");
-      const savedConfig = localStorage.getItem("ai-config");
+      loadSettings();
+    }
+  }, [isOpen]);
+
+  const loadSettings = async () => {
+    try {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (savedPrompt) {
-        setDefaultPrompt(savedPrompt);
+      if (!user) return;
+
+      // Carregar configurações de IA
+      const { data: aiSettings } = await supabase
+        .from('ai_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider', aiConfig.provider)
+        .single();
+
+      if (aiSettings) {
+        setAiConfig({
+          provider: aiSettings.provider as AIProvider,
+          apiKey: aiSettings.api_key || '',
+          model: aiSettings.model,
+          temperature: Number(aiSettings.temperature),
+          maxTokens: aiSettings.max_tokens
+        });
+      }
+
+      // Carregar prompt padrão
+      const { data: promptData } = await supabase
+        .from('default_prompts')
+        .select('prompt_text')
+        .eq('user_id', user.id)
+        .single();
+
+      if (promptData) {
+        setDefaultPrompt(promptData.prompt_text);
       } else {
         setDefaultPrompt(`Você é um assistente especializado em análise de documentos e casos técnicos.
 
@@ -125,12 +158,12 @@ Por favor, analise cuidadosamente o caso apresentado e forneça:
 
 Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`);
       }
-
-      if (savedConfig) {
-        setAiConfig(JSON.parse(savedConfig));
-      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isOpen]);
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -146,13 +179,43 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
         return;
       }
 
-      // Salvar configurações no localStorage
-      localStorage.setItem("default-ai-prompt", defaultPrompt.trim());
-      localStorage.setItem("ai-config", JSON.stringify(aiConfig));
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Salvar configurações de IA
+      const { error: aiError } = await supabase
+        .from('ai_settings')
+        .upsert({
+          user_id: user.id,
+          provider: aiConfig.provider,
+          api_key: aiConfig.apiKey,
+          model: aiConfig.model,
+          temperature: aiConfig.temperature,
+          max_tokens: aiConfig.maxTokens
+        }, {
+          onConflict: 'user_id,provider'
+        });
+
+      if (aiError) throw aiError;
+
+      // Salvar prompt padrão
+      const { error: promptError } = await supabase
+        .from('default_prompts')
+        .upsert({
+          user_id: user.id,
+          prompt_text: defaultPrompt.trim()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (promptError) throw promptError;
       
       toast({
         title: "Configurações salvas",
-        description: "Todas as configurações foram atualizadas com sucesso.",
+        description: "Todas as configurações foram salvas com segurança.",
       });
       
       onClose();
@@ -168,8 +231,28 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
     }
   };
 
-  const handleReset = () => {
-    setDefaultPrompt(`Você é um assistente especializado em análise de documentos e casos técnicos.
+  const handleReset = async () => {
+    try {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Deletar configurações existentes
+      await supabase
+        .from('ai_settings')
+        .delete()
+        .eq('user_id', user.id);
+
+      await supabase
+        .from('default_prompts')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Resetar para valores padrão
+      const defaultPromptText = `Você é um assistente especializado em análise de documentos e casos técnicos.
 
 Por favor, analise cuidadosamente o caso apresentado e forneça:
 
@@ -179,15 +262,31 @@ Por favor, analise cuidadosamente o caso apresentado e forneça:
 4. **Recomendações**: Próximos passos sugeridos
 5. **Considerações Importantes**: Alertas e observações relevantes
 
-Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`);
-    
-    setAiConfig({
-      provider: 'openrouter',
-      apiKey: '',
-      model: 'google/gemma-7b-it:free',
-      temperature: 0.7,
-      maxTokens: 2048
-    });
+Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`;
+
+      setDefaultPrompt(defaultPromptText);
+      setAiConfig({
+        provider: 'openrouter',
+        apiKey: '',
+        model: 'google/gemma-7b-it:free',
+        temperature: 0.7,
+        maxTokens: 2048
+      });
+      
+      toast({
+        title: "Configurações restauradas",
+        description: "As configurações padrão foram restauradas.",
+      });
+    } catch (error) {
+      console.error('Erro ao restaurar configurações:', error);
+      toast({
+        title: "Erro ao restaurar",
+        description: "Não foi possível restaurar as configurações.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getCurrentModels = () => {

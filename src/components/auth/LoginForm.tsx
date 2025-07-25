@@ -21,7 +21,11 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    // Input validation and sanitization
+    const sanitizedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!sanitizedEmail || !password) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
@@ -30,9 +34,27 @@ export function LoginForm({ onLogin, onSwitchToRegister }: LoginFormProps) {
       return;
     }
 
+    if (!emailRegex.test(sanitizedEmail)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await onLogin(email, password);
+      await onLogin(sanitizedEmail, password);
     } catch (error) {
       console.error("Login error:", error);
     } finally {
