@@ -53,7 +53,7 @@ const AI_PROVIDERS = {
         { id: 'openai/gpt-4o', name: 'GPT-4 Turbo', description: 'Modelo avançado da OpenAI', icon: '⚡' },
         { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', description: 'Modelo balanceado da Anthropic', icon: '🎭' },
         { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', description: 'Modelo da Meta', icon: '🦙' },
-        { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1', description: 'Modelo de raciocínio profundo', icon: '🧠' }
+        { id: 'deepseek/deepseek-r1-distill-qwen-32b', name: 'DeepSeek R1 Distill', description: 'Modelo de raciocínio profundo', icon: '🧠' }
       ]
     }
   },
@@ -80,7 +80,7 @@ const AI_PROVIDERS = {
     name: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
     models: [
-      { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 Distill 70B', description: 'Modelo de raciocínio destilado', icon: '🧠' },
+      { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 Distill 70B', description: 'Modelo de raciocínio destilado (Limitado)', icon: '🧠' },
       { id: 'deepseek-chat', name: 'DeepSeek Chat', description: 'Modelo de conversação geral', icon: '💬' },
       { id: 'deepseek-coder', name: 'DeepSeek Coder', description: 'Especializado em programação', icon: '💻' }
     ]
@@ -99,9 +99,9 @@ const AI_PROVIDERS = {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [defaultPrompt, setDefaultPrompt] = useState("");
   const [aiConfig, setAiConfig] = useState<AIConfig>({
-    provider: 'openrouter',
+    provider: 'deepseek',
     apiKey: '',
-    model: 'deepseek/deepseek-r1-distill-qwen-32b',
+    model: 'deepseek-chat',
     temperature: 0.7,
     maxTokens: 2048
   });
@@ -378,9 +378,9 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
 
       setDefaultPrompt(defaultPromptText);
       setAiConfig({
-        provider: 'openrouter',
+        provider: 'deepseek',
         apiKey: '',
-        model: 'deepseek/deepseek-r1-distill-qwen-32b',
+        model: 'deepseek-chat',
         temperature: 0.7,
         maxTokens: 2048
       });
@@ -475,6 +475,8 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                         
                         if (newProvider === 'openrouter') {
                           defaultModel = 'deepseek/deepseek-r1-distill-qwen-32b';
+                        } else if (newProvider === 'deepseek') {
+                          defaultModel = 'deepseek-chat';
                         } else {
                           defaultModel = AI_PROVIDERS[newProvider].models[0].id;
                         }
