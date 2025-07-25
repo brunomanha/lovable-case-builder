@@ -80,9 +80,8 @@ const AI_PROVIDERS = {
     name: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
     models: [
-      { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 Distill 70B', description: 'Modelo de raciocínio destilado (Limitado)', icon: '🧠' },
       { id: 'deepseek-chat', name: 'DeepSeek Chat', description: 'Modelo de conversação geral', icon: '💬' },
-      { id: 'deepseek-coder', name: 'DeepSeek Coder', description: 'Especializado em programação', icon: '💻' }
+      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', description: 'Modelo de raciocínio avançado', icon: '🧠' }
     ]
   },
   groq: {
