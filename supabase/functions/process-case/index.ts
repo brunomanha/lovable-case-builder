@@ -138,23 +138,153 @@ DESCRIÇÃO: ${caseData.description}${attachmentInfo}
 
 Por favor, analise este caso seguindo as diretrizes estabelecidas e considerando todos os anexos disponíveis.`;
 
-    // Verificar se tem OpenRouter API Key configurada
-    const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
-    
-    if (openrouterApiKey && (userProvider === 'openrouter' || !userApiKey)) {
-      console.log(`Enviando para OpenRouter com modelo: ${userModel}`);
+    // Usar o provider configurado pelo usuário
+    if (userApiKey && userProvider) {
+      console.log(`Enviando para ${userProvider} com modelo: ${userModel}`);
+      
+      let apiUrl = '';
+      let headers: any = {
+        'Authorization': `Bearer ${userApiKey}`,
+        'Content-Type': 'application/json',
+      };
+      
+      // Configurar URL e headers específicos por provider
+      switch (userProvider) {
+        case 'openrouter':
+          apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+          headers['HTTP-Referer'] = 'https://hvcfntuwyhgfbbdruihq.supabase.co';
+          headers['X-Title'] = 'Sistema de Análise IA';
+          break;
+        case 'openai':
+          apiUrl = 'https://api.openai.com/v1/chat/completions';
+          break;
+        case 'anthropic':
+          apiUrl = 'https://api.anthropic.com/v1/messages';
+          headers['anthropic-version'] = '2023-06-01';
+          break;
+        case 'deepseek':
+          apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+          break;
+        case 'groq':
+          apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+          break;
+        default:
+          throw new Error(`Provider não suportado: ${userProvider}`);
+      }
       
       try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        let requestBody: any;
+        
+        // Anthropic usa formato diferente
+        if (userProvider === 'anthropic') {
+          requestBody = {
+            model: userModel,
+            max_tokens: userMaxTokens,
+            messages: [
+              { role: 'user', content: `${userPrompt}\n\n${fullPrompt}` }
+            ],
+            temperature: userTemperature,
+          };
+        } else {
+          // OpenAI, OpenRouter, DeepSeek, Groq usam formato OpenAI
+          requestBody = {
+            model: userModel,
+            messages: [
+              { 
+                role: 'system', 
+                content: userPrompt
+              },
+              { role: 'user', content: fullPrompt }
+            ],
+            max_tokens: userMaxTokens,
+            temperature: userTemperature,
+          };
+        }
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`${userProvider} API error: ${response.statusText} - ${errorText}`);
+        }
+
+        const responseData = await response.json();
+        
+        // Extrair resposta baseado no provider
+        if (userProvider === 'anthropic') {
+          aiResponse = responseData.content[0].text;
+        } else {
+          aiResponse = responseData.choices[0].message.content;
+        }
+        
+        modelUsed = userModel;
+        
+      } catch (error) {
+        console.error(`Erro ao chamar ${userProvider}:`, error);
+        throw new Error(`Erro na API do ${userProvider}: ${error.message}`);
+      }
+      
+    } else {
+      // Fallback para APIs de sistema
+      const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+      const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+      
+      if (openrouterApiKey) {
+        console.log('Usando OpenRouter como fallback...');
+        
+        try {
+          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterApiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://hvcfntuwyhgfbbdruihq.supabase.co',
+              'X-Title': 'Sistema de Análise IA'
+            },
+            body: JSON.stringify({
+              model: userModel,
+              messages: [
+                { 
+                  role: 'system', 
+                  content: userPrompt
+                },
+                { role: 'user', content: fullPrompt }
+              ],
+              max_tokens: userMaxTokens,
+              temperature: userTemperature,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`OpenRouter API error: ${response.statusText} - ${errorText}`);
+          }
+
+          const responseData = await response.json();
+          aiResponse = responseData.choices[0].message.content;
+          modelUsed = userModel;
+          
+        } catch (error) {
+          console.error('Erro ao chamar OpenRouter:', error);
+          throw new Error(`Erro na API do OpenRouter: ${error.message}`);
+        }
+        
+      } else if (deepseekApiKey) {
+        // Fallback para DeepSeek se configurado
+        console.log('Usando DeepSeek como fallback...');
+        
+        const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openrouterApiKey}`,
+            'Authorization': `Bearer ${deepseekApiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://hvcfntuwyhgfbbdruihq.supabase.co',
-            'X-Title': 'Sistema de Análise IA'
           },
           body: JSON.stringify({
-            model: userModel,
+            model: 'deepseek-chat',
             messages: [
               { 
                 role: 'system', 
@@ -167,53 +297,15 @@ Por favor, analise este caso seguindo as diretrizes estabelecidas e considerando
           }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`OpenRouter API error: ${response.statusText} - ${errorText}`);
+        if (!deepseekResponse.ok) {
+          throw new Error(`DeepSeek API error: ${deepseekResponse.statusText}`);
         }
 
-        const responseData = await response.json();
-        aiResponse = responseData.choices[0].message.content;
-        modelUsed = userModel;
+        const deepseekData = await deepseekResponse.json();
+        aiResponse = deepseekData.choices[0].message.content;
+        modelUsed = 'deepseek-chat';
         
-      } catch (error) {
-        console.error('Erro ao chamar OpenRouter:', error);
-        throw new Error(`Erro na API do OpenRouter: ${error.message}`);
-      }
-      
-    } else if (deepseekApiKey) {
-      // Fallback para DeepSeek se configurado
-      console.log('Usando DeepSeek como fallback...');
-      
-      const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${deepseekApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
-            { 
-              role: 'system', 
-              content: userPrompt
-            },
-            { role: 'user', content: fullPrompt }
-          ],
-          max_tokens: userMaxTokens,
-          temperature: userTemperature,
-        }),
-      });
-
-      if (!deepseekResponse.ok) {
-        throw new Error(`DeepSeek API error: ${deepseekResponse.statusText}`);
-      }
-
-      const deepseekData = await deepseekResponse.json();
-      aiResponse = deepseekData.choices[0].message.content;
-      modelUsed = 'deepseek-chat';
-      
-    } else {
+      } else {
       // Usar resposta mock se não houver configuração
       aiResponse = `${userPrompt}
 
@@ -238,8 +330,9 @@ Este caso foi recebido e está sendo processado pelo sistema de análise de IA.
 - Elaboração de plano de ação específico
 
 *Nota: Configure sua chave de API e modelo nas configurações para obter análises completas com IA.*
-      `;
-      modelUsed = 'mock-ai';
+        `;
+        modelUsed = 'mock-ai';
+      }
     }
 
 // Função para obter prompt padrão
