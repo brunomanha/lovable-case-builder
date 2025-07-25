@@ -118,14 +118,55 @@ serve(async (req) => {
     // Preparar informações dos anexos
     let attachmentInfo = '';
     if (caseData.attachments && caseData.attachments.length > 0) {
-      attachmentInfo = `\n\nANEXOS DISPONÍVEIS:`;
-      caseData.attachments.forEach((attachment: any, index: number) => {
-        attachmentInfo += `\n${index + 1}. Arquivo: ${attachment.filename}`;
-        attachmentInfo += `\n   Tipo: ${attachment.content_type}`;
-        if (attachment.file_url) {
-          attachmentInfo += `\n   URL: ${attachment.file_url}`;
+      attachmentInfo = `\n\nANEXOS PARA ANÁLISE:`;
+      
+      for (let i = 0; i < caseData.attachments.length; i++) {
+        const attachment = caseData.attachments[i];
+        attachmentInfo += `\n\n--- ANEXO ${i + 1} ---`;
+        attachmentInfo += `\nNome do arquivo: ${attachment.filename}`;
+        attachmentInfo += `\nTipo: ${attachment.content_type}`;
+        
+        // Para arquivos de texto, tentar extrair o conteúdo
+        if (attachment.file_url && attachment.content_type) {
+          try {
+            if (attachment.content_type.includes('text/') || 
+                attachment.content_type.includes('application/json') ||
+                attachment.content_type.includes('application/xml')) {
+              
+              console.log(`Tentando baixar conteúdo do arquivo: ${attachment.filename}`);
+              const fileResponse = await fetch(attachment.file_url);
+              if (fileResponse.ok) {
+                const fileContent = await fileResponse.text();
+                attachmentInfo += `\nConteúdo do arquivo:\n${fileContent}`;
+              } else {
+                attachmentInfo += `\nNão foi possível baixar o conteúdo do arquivo.`;
+              }
+            } else if (attachment.content_type.includes('application/pdf')) {
+              attachmentInfo += `\nTipo: Documento PDF - Análise manual necessária`;
+              attachmentInfo += `\nDescrição: Este é um arquivo PDF que contém informações relevantes para o caso.`;
+              attachmentInfo += `\nRecomendação: Solicite ao usuário que forneça um resumo do conteúdo ou converta para texto.`;
+            } else if (attachment.content_type.includes('image/')) {
+              attachmentInfo += `\nTipo: Imagem - Análise visual necessária`;
+              attachmentInfo += `\nDescrição: Este é um arquivo de imagem que pode conter informações visuais relevantes.`;
+              attachmentInfo += `\nRecomendação: Solicite ao usuário que descreva o conteúdo da imagem.`;
+            } else {
+              attachmentInfo += `\nTipo: Arquivo binário - Análise técnica necessária`;
+              attachmentInfo += `\nDescrição: Arquivo em formato que requer processamento especializado.`;
+            }
+          } catch (error) {
+            console.error(`Erro ao processar anexo ${attachment.filename}:`, error);
+            attachmentInfo += `\nErro ao processar arquivo: ${error.message}`;
+          }
+        } else {
+          attachmentInfo += `\nArquivo não disponível para análise automática.`;
         }
-      });
+      }
+      
+      attachmentInfo += `\n\nINSTRUÇÕES PARA ANÁLISE DOS ANEXOS:`;
+      attachmentInfo += `\n- Considere todos os anexos fornecidos em sua análise`;
+      attachmentInfo += `\n- Para arquivos que não puderam ser processados automaticamente, mencione sua limitação`;
+      attachmentInfo += `\n- Solicite esclarecimentos sobre conteúdos específicos quando necessário`;
+      attachmentInfo += `\n- Forneça recomendações baseadas nos tipos de arquivo disponíveis`;
     }
 
     // Preparar prompt completo
