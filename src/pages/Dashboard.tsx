@@ -443,9 +443,10 @@ Sistema IARA - Análise Inteligente de Casos
               <CaseCard
                 key={case_.id}
                 case={case_}
-                onView={handleViewCase}
-                onDownload={handleDownloadCase}
-                onProcess={case_.status === 'pending' ? () => handleProcessCase(case_.id) : undefined}
+                onViewCase={handleViewCase}
+                onDownloadCase={handleDownloadCase}
+                onProcessCase={handleProcessCase}
+                onDeleteCase={handleDeleteCase}
               />
             ))}
           </div>
