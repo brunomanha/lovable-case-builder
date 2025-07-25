@@ -198,9 +198,7 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await supabase.functions.invoke('get-cases', {
-        body: { caseId },
-      });
+      const response = await supabase.functions.invoke('get-cases?caseId=' + caseId);
 
       if (response.data?.success && response.data.case) {
         const fullCase = response.data.case;
@@ -269,9 +267,7 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await supabase.functions.invoke('get-cases', {
-        body: { caseId },
-      });
+      const response = await supabase.functions.invoke('get-cases?caseId=' + caseId);
 
       let caseToDownload: Case;
       
