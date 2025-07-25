@@ -81,6 +81,19 @@ serve(async (req) => {
       throw new Error('Acesso negado: você não tem permissão para processar este caso');
     }
 
+    // Buscar configurações de IA do usuário
+    const { data: aiSettings, error: aiSettingsError } = await supabase
+      .from('ai_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // Buscar prompt padrão do usuário
+    const { data: defaultPrompt, error: promptError } = await supabase
+      .from('default_prompts')
+      .select('prompt_text')
+      .eq('user_id', user.id)
+      .single();
 
     // Atualizar status para processando
     await supabase
@@ -92,24 +105,80 @@ serve(async (req) => {
     let modelUsed = 'mock';
     const startTime = Date.now();
 
-    // Carregar prompt padrão personalizado
-    const defaultPrompt = await getDefaultPrompt();
+    // Usar configurações do usuário ou padrões
+    const userPrompt = defaultPrompt?.prompt_text || await getDefaultPrompt();
+    const userApiKey = aiSettings?.api_key;
+    const userModel = aiSettings?.model || 'deepseek/deepseek-r1-distill-qwen-32b';
+    const userProvider = aiSettings?.provider || 'openrouter';
+    const userTemperature = aiSettings?.temperature || 0.7;
+    const userMaxTokens = aiSettings?.max_tokens || 2048;
 
-    if (deepseekApiKey) {
-      // Usar DeepSeek se a chave estiver disponível
-      const prompt = `${defaultPrompt}
+    // Preparar informações dos anexos
+    let attachmentInfo = '';
+    if (caseData.attachments && caseData.attachments.length > 0) {
+      attachmentInfo = `\n\nANEXOS DISPONÍVEIS:`;
+      caseData.attachments.forEach((attachment: any, index: number) => {
+        attachmentInfo += `\n${index + 1}. Arquivo: ${attachment.filename}`;
+        attachmentInfo += `\n   Tipo: ${attachment.content_type}`;
+        if (attachment.file_url) {
+          attachmentInfo += `\n   URL: ${attachment.file_url}`;
+        }
+      });
+    }
+
+    // Preparar prompt completo
+    const fullPrompt = `${userPrompt}
 
 CASO PARA ANÁLISE:
 
 TÍTULO: ${caseData.title}
-DESCRIÇÃO: ${caseData.description}
+DESCRIÇÃO: ${caseData.description}${attachmentInfo}
 
-Anexos: ${caseData.attachments?.length || 0} arquivo(s) anexado(s).
+Por favor, analise este caso seguindo as diretrizes estabelecidas e considerando todos os anexos disponíveis.`;
 
-Por favor, analise este caso seguindo as diretrizes estabelecidas.
-      `;
+    if (userApiKey && userProvider === 'openrouter') {
+      console.log(`Enviando para OpenRouter com modelo: ${userModel}`);
+      
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${userApiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://hvcfntuwyhgfbbdruihq.supabase.co',
+            'X-Title': 'Sistema de Análise IA'
+          },
+          body: JSON.stringify({
+            model: userModel,
+            messages: [
+              { 
+                role: 'system', 
+                content: userPrompt
+              },
+              { role: 'user', content: fullPrompt }
+            ],
+            max_tokens: userMaxTokens,
+            temperature: userTemperature,
+          }),
+        });
 
-      console.log('Enviando para DeepSeek...');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`OpenRouter API error: ${response.statusText} - ${errorText}`);
+        }
+
+        const responseData = await response.json();
+        aiResponse = responseData.choices[0].message.content;
+        modelUsed = userModel;
+        
+      } catch (error) {
+        console.error('Erro ao chamar OpenRouter:', error);
+        throw new Error(`Erro na API do OpenRouter: ${error.message}`);
+      }
+      
+    } else if (deepseekApiKey) {
+      // Fallback para DeepSeek se configurado
+      console.log('Usando DeepSeek como fallback...');
       
       const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
@@ -122,12 +191,12 @@ Por favor, analise este caso seguindo as diretrizes estabelecidas.
           messages: [
             { 
               role: 'system', 
-              content: defaultPrompt
+              content: userPrompt
             },
-            { role: 'user', content: prompt }
+            { role: 'user', content: fullPrompt }
           ],
-          max_tokens: 2000,
-          temperature: 0.7,
+          max_tokens: userMaxTokens,
+          temperature: userTemperature,
         }),
       });
 
@@ -140,8 +209,8 @@ Por favor, analise este caso seguindo as diretrizes estabelecidas.
       modelUsed = 'deepseek-chat';
       
     } else {
-      // Usar resposta mock se não houver chave da API
-      aiResponse = `${defaultPrompt}
+      // Usar resposta mock se não houver configuração
+      aiResponse = `${userPrompt}
 
 ## Análise do Caso: ${caseData.title}
 
@@ -163,7 +232,7 @@ Este caso foi recebido e está sendo processado pelo sistema de análise de IA.
 - Validação das informações fornecidas
 - Elaboração de plano de ação específico
 
-*Nota: Esta é uma resposta de demonstração. Configure sua chave de API do DeepSeek para obter análises completas com IA.*
+*Nota: Configure sua chave de API e modelo nas configurações para obter análises completas com IA.*
       `;
       modelUsed = 'mock-ai';
     }
