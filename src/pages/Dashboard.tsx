@@ -82,6 +82,7 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
           status: dbCase.status === 'failed' ? 'error' : dbCase.status,
           createdAt: new Date(dbCase.created_at),
           attachmentsCount: dbCase.attachments?.[0]?.count || 0,
+          aiResponse: undefined, // Será carregado quando abrir o modal
           hasAiResponse: dbCase.ai_responses?.[0]?.count > 0
         }));
         setCases(transformedCases);
