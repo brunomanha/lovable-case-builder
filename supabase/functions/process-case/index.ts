@@ -14,11 +14,29 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authorization header for user verification
+    const authorization = req.headers.get('Authorization');
+    if (!authorization) {
+      throw new Error('Token de autorização obrigatório');
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
-    // Create Supabase client with service role key for admin operations
+    // Create user-scoped client for authorization check
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authorization } }
+    });
+
+    // Verify user authentication
+    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    // Create service role client for admin operations
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     const { caseId } = await req.json();
@@ -27,9 +45,15 @@ serve(async (req) => {
       throw new Error('caseId é obrigatório');
     }
 
-    console.log(`Processando caso: ${caseId}`);
+    // Validate caseId format (UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(caseId)) {
+      throw new Error('Formato de caseId inválido');
+    }
 
-    // Buscar o caso no banco de dados
+    console.log(`Processando caso: ${caseId} para usuário: ${user.id}`);
+
+    // Buscar o caso no banco de dados e verificar propriedade
     const { data: caseData, error: caseError } = await supabase
       .from('cases')
       .select(`
@@ -49,6 +73,12 @@ serve(async (req) => {
     if (caseError) {
       throw new Error(`Erro ao buscar caso: ${caseError.message}`);
     }
+
+    // Critical: Verify case ownership
+    if (caseData.user_id !== user.id) {
+      throw new Error('Acesso negado: você não tem permissão para processar este caso');
+    }
+
 
     // Atualizar status para processando
     await supabase

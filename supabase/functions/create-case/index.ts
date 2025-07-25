@@ -36,8 +36,42 @@ serve(async (req) => {
 
     const { title, description, attachments = [] } = await req.json();
 
+    // Enhanced input validation
     if (!title || !description) {
       throw new Error('Título e descrição são obrigatórios');
+    }
+
+    // Security validation
+    if (typeof title !== 'string' || typeof description !== 'string') {
+      throw new Error('Dados inválidos fornecidos');
+    }
+
+    if (title.length > 200) {
+      throw new Error('Título não pode exceder 200 caracteres');
+    }
+
+    if (description.length > 5000) {
+      throw new Error('Descrição não pode exceder 5000 caracteres');
+    }
+
+    // Validate attachments if provided
+    if (attachments && Array.isArray(attachments)) {
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png', 'image/gif'];
+      const maxFileSize = 50 * 1024 * 1024; // 50MB
+
+      for (const attachment of attachments) {
+        if (!attachment.filename || !attachment.content_type) {
+          throw new Error('Dados de anexo inválidos');
+        }
+
+        if (!allowedTypes.includes(attachment.content_type)) {
+          throw new Error(`Tipo de arquivo não permitido: ${attachment.content_type}`);
+        }
+
+        if (attachment.file_size && attachment.file_size > maxFileSize) {
+          throw new Error('Arquivo muito grande. Máximo: 50MB');
+        }
+      }
     }
 
     console.log(`Criando caso para usuário: ${user.id}`);

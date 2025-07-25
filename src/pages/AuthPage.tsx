@@ -38,10 +38,13 @@ export default function AuthPage() {
 
   const handleRegister = async (name: string, email: string, password: string) => {
     try {
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             name: name,
           },
