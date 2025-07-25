@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsModalProps {
@@ -38,21 +38,22 @@ const AI_PROVIDERS = {
     baseUrl: 'https://openrouter.ai/api/v1',
     models: {
       free: [
-        { id: 'google/gemma-7b-it:free', name: 'Gemma 7B (Gratuito)', description: 'Modelo gratuito do Google' },
-        { id: 'microsoft/phi-3-mini-128k-instruct:free', name: 'Phi-3 Mini (Gratuito)', description: 'Modelo gratuito da Microsoft' },
-        { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (Gratuito)', description: 'Modelo gratuito da Mistral' },
-        { id: 'huggingfaceh4/zephyr-7b-beta:free', name: 'Zephyr 7B (Gratuito)', description: 'Modelo gratuito da HuggingFace' },
-        { id: 'openchat/openchat-7b:free', name: 'OpenChat 7B (Gratuito)', description: 'Modelo gratuito do OpenChat' },
-        { id: 'gryphe/mythomist-7b:free', name: 'Mythomist 7B (Gratuito)', description: 'Modelo gratuito especializado' }
+        { id: 'deepseek/deepseek-r1-distill-qwen-32b', name: 'DeepSeek: Deepseek R1 0528 Qwen3 8B (free)', description: 'Modelo de raciocínio gratuito', icon: '🧠' },
+        { id: 'qwen/qwen-2.5-coder-32b-instruct:free', name: 'Qwen: Qwen3 Coder (free)', description: 'Especializado em código gratuito', icon: '🔮' },
+        { id: 'qwen/qwq-32b-preview:free', name: 'Qwen: Qwen3 235B A22B Instruct 2507 (free)', description: 'Modelo de raciocínio gratuito', icon: '🔮' },
+        { id: 'google/gemini-2.0-flash-exp:free', name: 'Google: Gemini 2.5 Flash Lite', description: 'Modelo rápido do Google', icon: '💎' },
+        { id: 'google/gemma-7b-it:free', name: 'Gemma 7B (Gratuito)', description: 'Modelo gratuito do Google', icon: '🤖' },
+        { id: 'microsoft/phi-3-mini-128k-instruct:free', name: 'Phi-3 Mini (Gratuito)', description: 'Modelo gratuito da Microsoft', icon: '🤖' }
       ],
       premium: [
-        { id: 'openai/gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Modelo avançado da OpenAI' },
-        { id: 'openai/gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Modelo popular da OpenAI' },
-        { id: 'anthropic/claude-3-haiku', name: 'Claude 3 Haiku', description: 'Modelo rápido da Anthropic' },
-        { id: 'anthropic/claude-3-sonnet', name: 'Claude 3 Sonnet', description: 'Modelo balanceado da Anthropic' },
-        { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus', description: 'Modelo mais avançado da Anthropic' },
-        { id: 'meta-llama/llama-3-70b-instruct', name: 'Llama 3 70B', description: 'Modelo da Meta' },
-        { id: 'google/gemini-pro', name: 'Gemini Pro', description: 'Modelo avançado do Google' }
+        { id: 'qwen/qwq-32b-preview', name: 'Qwen: Qwen3 235B A22B Thinking 2507', description: 'Modelo de raciocínio avançado', icon: '🔮' },
+        { id: 'qwen/qwen-2.5-coder-32b-instruct', name: 'Qwen: Qwen3 Coder', description: 'Especializado em código', icon: '🔮' },
+        { id: 'qwen/qwen-2.5-72b-instruct', name: 'Qwen: Qwen3 235B A22B Instruct 2507', description: 'Modelo de instrução avançado', icon: '🔮' },
+        { id: 'bytedance/ui-tars-7b', name: 'Bytedance: UI-TARS 7B', description: 'Especializado em interfaces', icon: '😊' },
+        { id: 'openai/gpt-4o', name: 'GPT-4 Turbo', description: 'Modelo avançado da OpenAI', icon: '⚡' },
+        { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', description: 'Modelo balanceado da Anthropic', icon: '🎭' },
+        { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', description: 'Modelo da Meta', icon: '🦙' },
+        { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1', description: 'Modelo de raciocínio profundo', icon: '🧠' }
       ]
     }
   },
@@ -60,35 +61,37 @@ const AI_PROVIDERS = {
     name: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
     models: [
-      { id: 'gpt-4', name: 'GPT-4', description: 'Modelo mais avançado' },
-      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Versão otimizada' },
-      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Rápido e eficiente' }
+      { id: 'gpt-4.1-2025-04-14', name: 'GPT-4.1', description: 'Modelo flagship mais recente', icon: '⚡' },
+      { id: 'o3-2025-04-16', name: 'O3', description: 'Modelo de raciocínio poderoso', icon: '🧠' },
+      { id: 'o4-mini-2025-04-16', name: 'O4 Mini', description: 'Raciocínio rápido e eficiente', icon: '🚀' },
+      { id: 'gpt-4o', name: 'GPT-4o', description: 'Modelo com visão', icon: '👁️' }
     ]
   },
   anthropic: {
     name: 'Anthropic',
     baseUrl: 'https://api.anthropic.com/v1',
     models: [
-      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Mais avançado' },
-      { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanceado' },
-      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Rápido' }
+      { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', description: 'Mais capaz e inteligente', icon: '🎭' },
+      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: 'Alto desempenho e eficiência', icon: '🎭' },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Modelo mais rápido', icon: '🎭' }
     ]
   },
   deepseek: {
     name: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
     models: [
-      { id: 'deepseek-chat', name: 'DeepSeek Chat', description: 'Modelo de chat' },
-      { id: 'deepseek-coder', name: 'DeepSeek Coder', description: 'Especializado em código' }
+      { id: 'deepseek-r1', name: 'DeepSeek R1', description: 'Modelo de raciocínio', icon: '🧠' },
+      { id: 'deepseek-chat', name: 'DeepSeek Chat', description: 'Modelo de chat', icon: '💬' },
+      { id: 'deepseek-coder', name: 'DeepSeek Coder', description: 'Especializado em código', icon: '💻' }
     ]
   },
   groq: {
     name: 'Groq',
     baseUrl: 'https://api.groq.com/openai/v1',
     models: [
-      { id: 'llama-3.1-405b-reasoning', name: 'Llama 3.1 405B', description: 'Modelo mais avançado' },
-      { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B', description: 'Versátil' },
-      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', description: 'Modelo eficiente' }
+      { id: 'llama-3.1-405b-reasoning', name: 'Llama 3.1 405B', description: 'Modelo mais avançado', icon: '🦙' },
+      { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B', description: 'Versátil', icon: '🦙' },
+      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', description: 'Modelo eficiente', icon: '🌊' }
     ]
   }
 };
@@ -98,11 +101,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [aiConfig, setAiConfig] = useState<AIConfig>({
     provider: 'openrouter',
     apiKey: '',
-    model: 'google/gemma-7b-it:free',
+    model: 'deepseek/deepseek-r1-distill-qwen-32b',
     temperature: 0.7,
     maxTokens: 2048
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [modelSearchTerm, setModelSearchTerm] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -401,9 +405,26 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
     const provider = AI_PROVIDERS[aiConfig.provider];
     if (aiConfig.provider === 'openrouter') {
       const openrouterProvider = provider as typeof AI_PROVIDERS.openrouter;
-      return [...openrouterProvider.models.free, ...openrouterProvider.models.premium];
+      const allModels = [...openrouterProvider.models.free, ...openrouterProvider.models.premium];
+      
+      if (modelSearchTerm.trim() === "") return allModels;
+      
+      return allModels.filter(model => 
+        model.name.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+        model.description.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+        model.id.toLowerCase().includes(modelSearchTerm.toLowerCase())
+      );
     }
-    return provider.models as Array<{ id: string; name: string; description: string; }>;
+    
+    const allModels = provider.models as Array<{ id: string; name: string; description: string; icon?: string; }>;
+    
+    if (modelSearchTerm.trim() === "") return allModels;
+    
+    return allModels.filter(model => 
+      model.name.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+      model.description.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+      model.id.toLowerCase().includes(modelSearchTerm.toLowerCase())
+    );
   };
 
   return (
@@ -453,7 +474,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                         let defaultModel = '';
                         
                         if (newProvider === 'openrouter') {
-                          defaultModel = 'google/gemma-7b-it:free';
+                          defaultModel = 'deepseek/deepseek-r1-distill-qwen-32b';
                         } else {
                           defaultModel = AI_PROVIDERS[newProvider].models[0].id;
                         }
@@ -463,6 +484,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                           provider: newProvider,
                           model: defaultModel
                         });
+                        setModelSearchTerm(""); // Reset search when changing provider
                       }}
                     >
                       <SelectTrigger>
@@ -478,54 +500,118 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Label htmlFor="model">Modelo</Label>
-                    <Select
-                      value={aiConfig.model}
-                      onValueChange={(value) => setAiConfig({ ...aiConfig, model: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {aiConfig.provider === 'openrouter' && (
-                          <>
-                            <div className="px-2 py-1 text-sm font-semibold text-green-600">
-                              🆓 Modelos Gratuitos
-                            </div>
-                            {AI_PROVIDERS.openrouter.models.free.map((model) => (
-                              <SelectItem key={model.id} value={model.id}>
-                                <div className="flex flex-col">
-                                  <span>{model.name}</span>
-                                  <span className="text-xs text-muted-foreground">{model.description}</span>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Input
+                          placeholder="Pesquisar modelos..."
+                          value={modelSearchTerm}
+                          onChange={(e) => setModelSearchTerm(e.target.value)}
+                          className="pl-8"
+                        />
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      </div>
+                      
+                      <div className="border rounded-lg max-h-64 overflow-y-auto bg-background">
+                        {getCurrentModels().length === 0 ? (
+                          <div className="p-4 text-center text-muted-foreground">
+                            Nenhum modelo encontrado
+                          </div>
+                        ) : (
+                          <div className="space-y-1 p-2">
+                            {aiConfig.provider === 'openrouter' && modelSearchTerm.trim() === "" && (
+                              <>
+                                <div className="px-2 py-1 text-sm font-semibold text-green-600 bg-green-50 rounded">
+                                  🆓 Modelos Gratuitos
                                 </div>
-                              </SelectItem>
-                            ))}
-                            <div className="px-2 py-1 text-sm font-semibold text-blue-600">
-                              💰 Modelos Premium
-                            </div>
-                            {AI_PROVIDERS.openrouter.models.premium.map((model) => (
-                              <SelectItem key={model.id} value={model.id}>
-                                <div className="flex flex-col">
-                                  <span>{model.name}</span>
-                                  <span className="text-xs text-muted-foreground">{model.description}</span>
+                                {AI_PROVIDERS.openrouter.models.free.map((model) => (
+                                  <div
+                                    key={model.id}
+                                    onClick={() => {
+                                      setAiConfig({ ...aiConfig, model: model.id });
+                                      setModelSearchTerm("");
+                                    }}
+                                    className={`p-3 rounded-lg cursor-pointer transition-colors border ${
+                                      aiConfig.model === model.id 
+                                        ? 'bg-primary/10 border-primary' 
+                                        : 'hover:bg-muted border-transparent'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">{model.icon}</span>
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm">{model.name}</div>
+                                        <div className="text-xs text-muted-foreground">{model.description}</div>
+                                      </div>
+                                      {aiConfig.model === model.id && (
+                                        <CheckCircle className="h-4 w-4 text-primary" />
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="px-2 py-1 text-sm font-semibold text-blue-600 bg-blue-50 rounded mt-3">
+                                  💎 Modelos Premium
                                 </div>
-                              </SelectItem>
-                            ))}
-                          </>
+                                {AI_PROVIDERS.openrouter.models.premium.map((model) => (
+                                  <div
+                                    key={model.id}
+                                    onClick={() => {
+                                      setAiConfig({ ...aiConfig, model: model.id });
+                                      setModelSearchTerm("");
+                                    }}
+                                    className={`p-3 rounded-lg cursor-pointer transition-colors border ${
+                                      aiConfig.model === model.id 
+                                        ? 'bg-primary/10 border-primary' 
+                                        : 'hover:bg-muted border-transparent'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">{model.icon}</span>
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm">{model.name}</div>
+                                        <div className="text-xs text-muted-foreground">{model.description}</div>
+                                      </div>
+                                      {aiConfig.model === model.id && (
+                                        <CheckCircle className="h-4 w-4 text-primary" />
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                            
+                            {(aiConfig.provider !== 'openrouter' || modelSearchTerm.trim() !== "") &&
+                              getCurrentModels().map((model) => (
+                                <div
+                                  key={model.id}
+                                  onClick={() => {
+                                    setAiConfig({ ...aiConfig, model: model.id });
+                                    setModelSearchTerm("");
+                                  }}
+                                  className={`p-3 rounded-lg cursor-pointer transition-colors border ${
+                                    aiConfig.model === model.id 
+                                      ? 'bg-primary/10 border-primary' 
+                                      : 'hover:bg-muted border-transparent'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">{model.icon || '🤖'}</span>
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm">{model.name}</div>
+                                      <div className="text-xs text-muted-foreground">{model.description}</div>
+                                    </div>
+                                    {aiConfig.model === model.id && (
+                                      <CheckCircle className="h-4 w-4 text-primary" />
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            }
+                          </div>
                         )}
-                        {aiConfig.provider !== 'openrouter' && 
-                          getCurrentModels().map((model) => (
-                            <SelectItem key={model.id} value={model.id}>
-                              <div className="flex flex-col">
-                                <span>{model.name}</span>
-                                <span className="text-xs text-muted-foreground">{model.description}</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
