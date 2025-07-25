@@ -113,6 +113,8 @@ serve(async (req) => {
     const userTemperature = aiSettings?.temperature || 0.7;
     const userMaxTokens = aiSettings?.max_tokens || 2048;
 
+    console.log(`Configurações do usuário: Provider: ${userProvider}, Model: ${userModel}, API Key: ${userApiKey ? 'presente' : 'ausente'}`);
+
     // Preparar informações dos anexos
     let attachmentInfo = '';
     if (caseData.attachments && caseData.attachments.length > 0) {
@@ -136,14 +138,17 @@ DESCRIÇÃO: ${caseData.description}${attachmentInfo}
 
 Por favor, analise este caso seguindo as diretrizes estabelecidas e considerando todos os anexos disponíveis.`;
 
-    if (userApiKey && userProvider === 'openrouter') {
+    // Verificar se tem OpenRouter API Key configurada
+    const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+    
+    if (openrouterApiKey && (userProvider === 'openrouter' || !userApiKey)) {
       console.log(`Enviando para OpenRouter com modelo: ${userModel}`);
       
       try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${userApiKey}`,
+            'Authorization': `Bearer ${openrouterApiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': 'https://hvcfntuwyhgfbbdruihq.supabase.co',
             'X-Title': 'Sistema de Análise IA'
