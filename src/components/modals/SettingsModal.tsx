@@ -380,7 +380,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       setAiConfig({
         provider: 'openrouter',
         apiKey: '',
-        model: 'google/gemma-7b-it:free',
+        model: 'deepseek/deepseek-r1-distill-qwen-32b',
         temperature: 0.7,
         maxTokens: 2048
       });
