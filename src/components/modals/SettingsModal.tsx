@@ -185,31 +185,72 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
         throw new Error('Usuário não autenticado');
       }
 
-      // Salvar configurações de IA
-      const { error: aiError } = await supabase
+      // Verificar se já existe configuração para este provedor
+      const { data: existingSettings } = await supabase
         .from('ai_settings')
-        .upsert({
-          user_id: user.id,
-          provider: aiConfig.provider,
-          api_key: aiConfig.apiKey,
-          model: aiConfig.model,
-          temperature: aiConfig.temperature,
-          max_tokens: aiConfig.maxTokens
-        }, {
-          onConflict: 'user_id,provider'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('provider', aiConfig.provider)
+        .single();
+
+      let aiError;
+      if (existingSettings) {
+        // Atualizar configuração existente
+        const { error } = await supabase
+          .from('ai_settings')
+          .update({
+            api_key: aiConfig.apiKey,
+            model: aiConfig.model,
+            temperature: aiConfig.temperature,
+            max_tokens: aiConfig.maxTokens
+          })
+          .eq('user_id', user.id)
+          .eq('provider', aiConfig.provider);
+        aiError = error;
+      } else {
+        // Criar nova configuração
+        const { error } = await supabase
+          .from('ai_settings')
+          .insert({
+            user_id: user.id,
+            provider: aiConfig.provider,
+            api_key: aiConfig.apiKey,
+            model: aiConfig.model,
+            temperature: aiConfig.temperature,
+            max_tokens: aiConfig.maxTokens
+          });
+        aiError = error;
+      }
 
       if (aiError) throw aiError;
 
-      // Salvar prompt padrão
-      const { error: promptError } = await supabase
+      // Verificar se já existe prompt padrão
+      const { data: existingPrompt } = await supabase
         .from('default_prompts')
-        .upsert({
-          user_id: user.id,
-          prompt_text: defaultPrompt.trim()
-        }, {
-          onConflict: 'user_id'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      let promptError;
+      if (existingPrompt) {
+        // Atualizar prompt existente
+        const { error } = await supabase
+          .from('default_prompts')
+          .update({
+            prompt_text: defaultPrompt.trim()
+          })
+          .eq('user_id', user.id);
+        promptError = error;
+      } else {
+        // Criar novo prompt
+        const { error } = await supabase
+          .from('default_prompts')
+          .insert({
+            user_id: user.id,
+            prompt_text: defaultPrompt.trim()
+          });
+        promptError = error;
+      }
 
       if (promptError) throw promptError;
       
