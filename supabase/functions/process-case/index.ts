@@ -56,18 +56,13 @@ serve(async (req) => {
     console.log(`Processando caso: ${caseId} para usuário: ${user.id}`);
 
     // Buscar o caso no banco de dados e verificar propriedade
-    const { data: caseData, error: caseError } = await supabase
+    const { data: caseData, error: caseError } = await userSupabase
       .from('cases')
       .select(`
         id,
         title,
         description,
-        user_id,
-        attachments (
-          filename,
-          file_url,
-          content_type
-        )
+        user_id
       `)
       .eq('id', caseId)
       .single();
@@ -80,6 +75,24 @@ serve(async (req) => {
     if (caseData.user_id !== user.id) {
       throw new Error('Acesso negado: você não tem permissão para processar este caso');
     }
+
+    // Buscar anexos separadamente
+    const { data: attachments, error: attachmentsError } = await userSupabase
+      .from('attachments')
+      .select('filename, file_url, content_type')
+      .eq('case_id', caseId);
+
+    if (attachmentsError) {
+      console.error('Erro ao buscar anexos:', attachmentsError);
+    }
+
+    console.log(`Anexos encontrados: ${attachments?.length || 0}`, attachments);
+
+    // Adicionar anexos ao objeto do caso
+    const caseDataWithAttachments = {
+      ...caseData,
+      attachments: attachments || []
+    };
 
     // Buscar configurações de IA do usuário
     const { data: aiSettings, error: aiSettingsError } = await supabase
@@ -117,11 +130,11 @@ serve(async (req) => {
 
     // Preparar informações dos anexos
     let attachmentInfo = '';
-    if (caseData.attachments && caseData.attachments.length > 0) {
+    if (caseDataWithAttachments.attachments && caseDataWithAttachments.attachments.length > 0) {
       attachmentInfo = `\n\nANEXOS PARA ANÁLISE:`;
       
-      for (let i = 0; i < caseData.attachments.length; i++) {
-        const attachment = caseData.attachments[i];
+      for (let i = 0; i < caseDataWithAttachments.attachments.length; i++) {
+        const attachment = caseDataWithAttachments.attachments[i];
         attachmentInfo += `\n\n--- ANEXO ${i + 1} ---`;
         attachmentInfo += `\nNome do arquivo: ${attachment.filename}`;
         attachmentInfo += `\nTipo: ${attachment.content_type}`;
@@ -356,9 +369,9 @@ Por favor, analise este caso seguindo as diretrizes estabelecidas e considerando
 Este caso foi recebido e está sendo processado pelo sistema de análise de IA.
 
 ### Análise Técnica
-**Título:** ${caseData.title}
-**Descrição:** ${caseData.description}
-**Anexos:** ${caseData.attachments?.length || 0} arquivo(s)
+**Título:** ${caseDataWithAttachments.title}
+**Descrição:** ${caseDataWithAttachments.description}
+**Anexos:** ${caseDataWithAttachments.attachments?.length || 0} arquivo(s)
 
 ### Recomendações
 1. Revisar a documentação relacionada
