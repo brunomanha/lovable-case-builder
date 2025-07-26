@@ -77,6 +77,7 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
     const loadAttachments = async () => {
       setIsLoadingAttachments(true);
       try {
+        console.log('Carregando anexos para caso:', caseItem.id);
         const { data, error } = await supabase
           .from('attachments')
           .select('*')
@@ -86,6 +87,7 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
         if (error) {
           console.error('Erro ao carregar anexos:', error);
         } else {
+          console.log('Anexos carregados:', data);
           setAttachments(data || []);
         }
       } catch (error) {
@@ -95,7 +97,9 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
       }
     };
 
-    loadAttachments();
+    if (caseItem.id) {
+      loadAttachments();
+    }
   }, [caseItem.id]);
 
   return (
