@@ -130,48 +130,58 @@ serve(async (req) => {
 
     // Preparar informações dos anexos
     let attachmentInfo = '';
+    let processedAttachments = 0;
+    
     if (caseDataWithAttachments.attachments && caseDataWithAttachments.attachments.length > 0) {
-      attachmentInfo = `\n\nANEXOS PARA ANÁLISE:`;
+      attachmentInfo = `\n\nANEXOS PARA ANÁLISE (${caseDataWithAttachments.attachments.length} arquivos encontrados):`;
       
       for (let i = 0; i < caseDataWithAttachments.attachments.length; i++) {
         const attachment = caseDataWithAttachments.attachments[i];
-        attachmentInfo += `\n\n--- ANEXO ${i + 1} ---`;
-        attachmentInfo += `\nNome do arquivo: ${attachment.filename}`;
+        attachmentInfo += `\n\n--- ANEXO ${i + 1}: ${attachment.filename} ---`;
         attachmentInfo += `\nTipo: ${attachment.content_type}`;
         
-        // Para arquivos de texto, tentar extrair o conteúdo
+        // Tentar processar cada anexo
         if (attachment.file_url && attachment.content_type) {
           try {
+            console.log(`Processando anexo ${i + 1}: ${attachment.filename} (${attachment.content_type})`);
+            
             if (attachment.content_type.includes('text/') || 
                 attachment.content_type.includes('application/json') ||
                 attachment.content_type.includes('application/xml')) {
               
-              console.log(`Tentando baixar conteúdo do arquivo: ${attachment.filename}`);
+              console.log(`Baixando conteúdo de texto de: ${attachment.filename}`);
               const fileResponse = await fetch(attachment.file_url);
               if (fileResponse.ok) {
                 const fileContent = await fileResponse.text();
-                attachmentInfo += `\nConteúdo do arquivo:\n${fileContent}`;
+                attachmentInfo += `\nStatus: ✅ PROCESSADO AUTOMATICAMENTE`;
+                attachmentInfo += `\nConteúdo:\n${fileContent.substring(0, 2000)}${fileContent.length > 2000 ? '...[conteúdo truncado]' : ''}`;
+                processedAttachments++;
               } else {
-                attachmentInfo += `\nNão foi possível baixar o conteúdo do arquivo.`;
+                console.error(`Erro HTTP ao baixar ${attachment.filename}: ${fileResponse.status}`);
+                attachmentInfo += `\nStatus: ❌ Erro ao baixar (HTTP ${fileResponse.status})`;
               }
             } else if (attachment.content_type.includes('application/pdf')) {
-              attachmentInfo += `\nTipo: Documento PDF - Análise manual necessária`;
-              attachmentInfo += `\nDescrição: Este é um arquivo PDF que contém informações relevantes para o caso.`;
-              attachmentInfo += `\nRecomendação: Solicite ao usuário que forneça um resumo do conteúdo ou converta para texto.`;
+              attachmentInfo += `\nStatus: 📄 ARQUIVO PDF IDENTIFICADO`;
+              attachmentInfo += `\nDescrição: Documento PDF com informações relevantes para análise jurídica`;
+              attachmentInfo += `\nObservação: Conteúdo PDF requer extração manual ou OCR para análise completa`;
+              processedAttachments++;
             } else if (attachment.content_type.includes('image/')) {
-              attachmentInfo += `\nTipo: Imagem - Análise visual necessária`;
-              attachmentInfo += `\nDescrição: Este é um arquivo de imagem que pode conter informações visuais relevantes.`;
-              attachmentInfo += `\nRecomendação: Solicite ao usuário que descreva o conteúdo da imagem.`;
+              attachmentInfo += `\nStatus: 🖼️ IMAGEM IDENTIFICADA`;
+              attachmentInfo += `\nDescrição: Arquivo de imagem que pode conter evidências visuais`;
+              attachmentInfo += `\nObservação: Análise visual requer processamento de OCR ou descrição manual`;
+              processedAttachments++;
             } else {
-              attachmentInfo += `\nTipo: Arquivo binário - Análise técnica necessária`;
-              attachmentInfo += `\nDescrição: Arquivo em formato que requer processamento especializado.`;
+              attachmentInfo += `\nStatus: 📎 ARQUIVO BINÁRIO`;
+              attachmentInfo += `\nObservação: Formato ${attachment.content_type} requer processamento especializado`;
+              processedAttachments++;
             }
           } catch (error) {
             console.error(`Erro ao processar anexo ${attachment.filename}:`, error);
-            attachmentInfo += `\nErro ao processar arquivo: ${error.message}`;
+            attachmentInfo += `\nStatus: ❌ ERRO NO PROCESSAMENTO`;
+            attachmentInfo += `\nErro: ${error.message}`;
           }
         } else {
-          attachmentInfo += `\nArquivo não disponível para análise automática.`;
+          attachmentInfo += `\nStatus: ⚠️ URL OU TIPO NÃO DISPONÍVEL`;
         }
       }
       
@@ -427,14 +437,16 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       .update({ status: 'completed' })
       .eq('id', caseId);
 
-    console.log(`Caso ${caseId} processado com sucesso em ${processingTime}ms`);
+    console.log(`Caso ${caseId} processado com sucesso em ${processingTime}ms. Anexos processados: ${processedAttachments}/${caseDataWithAttachments.attachments?.length || 0}`);
 
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Caso processado com sucesso',
       response: aiResponse,
       processing_time: processingTime,
-      model_used: modelUsed
+      model_used: modelUsed,
+      attachments_processed: processedAttachments,
+      total_attachments: caseDataWithAttachments.attachments?.length || 0
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
