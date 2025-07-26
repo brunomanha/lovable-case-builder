@@ -61,7 +61,18 @@ serve(async (req) => {
 
     // Validate attachments if provided
     if (attachments && Array.isArray(attachments)) {
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png', 'image/gif'];
+      const allowedTypes = [
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+        'text/plain', 
+        'text/csv',
+        'application/json',
+        'image/jpeg', 
+        'image/jpg',
+        'image/png', 
+        'image/gif'
+      ];
       const maxFileSize = 50 * 1024 * 1024; // 50MB
 
       for (const attachment of attachments) {
@@ -98,6 +109,7 @@ serve(async (req) => {
     }
 
     // Criar attachments se fornecidos
+    console.log(`Attachments recebidos: ${attachments.length}`, attachments);
     if (attachments.length > 0) {
       const attachmentData = attachments.map((attachment: any) => ({
         case_id: caseData.id,
@@ -107,13 +119,18 @@ serve(async (req) => {
         content_type: attachment.content_type
       }));
 
-      const { error: attachmentError } = await supabaseWithAuth
+      console.log('Dados dos anexos a serem inseridos:', attachmentData);
+
+      const { data: insertedAttachments, error: attachmentError } = await supabaseWithAuth
         .from('attachments')
-        .insert(attachmentData);
+        .insert(attachmentData)
+        .select();
 
       if (attachmentError) {
         console.error('Erro ao criar attachments:', attachmentError);
         // Não falhar completamente, apenas logar o erro
+      } else {
+        console.log('Anexos criados com sucesso:', insertedAttachments);
       }
     }
 
