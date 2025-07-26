@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Case } from "@/components/dashboard/CaseCard";
+import { AttachmentViewer } from "@/components/attachments/AttachmentViewer";
 import { 
   FileText, 
   Clock, 
@@ -21,10 +22,21 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CaseDetailsModalProps {
   case: Case;
   onClose: () => void;
+}
+
+interface Attachment {
+  id: string;
+  filename: string;
+  file_url: string;
+  content_type: string;
+  file_size: number;
+  created_at: string;
 }
 
 const statusConfig = {
@@ -55,8 +67,36 @@ const statusConfig = {
 };
 
 export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalProps) {
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isLoadingAttachments, setIsLoadingAttachments] = useState(false);
+  
   const status = statusConfig[caseItem.status];
   const StatusIcon = status.icon;
+
+  useEffect(() => {
+    const loadAttachments = async () => {
+      setIsLoadingAttachments(true);
+      try {
+        const { data, error } = await supabase
+          .from('attachments')
+          .select('*')
+          .eq('case_id', caseItem.id)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Erro ao carregar anexos:', error);
+        } else {
+          setAttachments(data || []);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar anexos:', error);
+      } finally {
+        setIsLoadingAttachments(false);
+      }
+    };
+
+    loadAttachments();
+  }, [caseItem.id]);
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
@@ -105,6 +145,27 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
 
             <Separator />
 
+            {/* Anexos */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                Anexos ({attachments.length})
+              </h3>
+              {isLoadingAttachments ? (
+                <div className="flex items-center justify-center p-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <span className="ml-2 text-muted-foreground">Carregando anexos...</span>
+                </div>
+              ) : (
+                <AttachmentViewer 
+                  attachments={attachments} 
+                  showAnalysisStatus={caseItem.status === 'completed'} 
+                />
+              )}
+            </div>
+
+            <Separator />
+
             {/* Status detalhado */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold">Status do Processamento</h3>
@@ -128,6 +189,27 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                     <CheckCircle className="h-5 w-5 text-success" />
                     Análise da IA
                   </h3>
+                  
+                  {/* Indicador de anexos analisados */}
+                  {attachments.length > 0 && (
+                    <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">Anexos Processados pela IA</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        A IA analisou {attachments.filter(a => 
+                          a.content_type.includes('text/') || 
+                          a.content_type.includes('application/json')
+                        ).length} de {attachments.length} anexos automaticamente. 
+                        {attachments.some(a => 
+                          a.content_type.includes('application/pdf') || 
+                          a.content_type.includes('image/')
+                        ) && ' Arquivos PDF e imagens foram referenciados na análise.'}
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="bg-gradient-to-br from-success/5 to-success/10 border border-success/20 rounded-lg p-6">
                     <div className="prose max-w-none">
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">

@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, FileText, Loader2, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewCaseFormProps {
-  onSubmit: (title: string, description: string, files: File[]) => Promise<void>;
+  onSubmit: (title: string, description: string, attachmentUrls: { filename: string; url: string; contentType: string; size: number }[]) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -35,7 +36,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
     }
 
     // Validação de extensões permitidas
-    const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png', '.gif'];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png', '.gif', '.csv', '.json'];
     const invalidExtensions = fileList.filter(file => {
       const extension = '.' + file.name.split('.').pop()?.toLowerCase();
       return !allowedExtensions.includes(extension);
@@ -44,7 +45,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
     if (invalidExtensions.length > 0) {
       toast({
         title: "Tipo de arquivo não permitido",
-        description: "Apenas arquivos PDF, DOC, DOCX, TXT e imagens são aceitos.",
+        description: "Apenas arquivos PDF, DOC, DOCX, TXT, CSV, JSON e imagens são aceitos.",
         variant: "destructive",
       });
       return;
@@ -77,6 +78,49 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const uploadFilesToSupabase = async (files: File[]) => {
+    const uploadedFiles = [];
+    
+    for (const file of files) {
+      try {
+        // Gerar nome único para o arquivo
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substr(2, 9);
+        const fileExtension = file.name.split('.').pop();
+        const filename = `${timestamp}_${randomId}.${fileExtension}`;
+        
+        // Upload para o bucket do Supabase
+        const { data, error } = await supabase.storage
+          .from('case-attachments')
+          .upload(filename, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        // Obter URL pública do arquivo
+        const { data: { publicUrl } } = supabase.storage
+          .from('case-attachments')
+          .getPublicUrl(filename);
+
+        uploadedFiles.push({
+          filename: file.name,
+          url: publicUrl,
+          contentType: file.type,
+          size: file.size
+        });
+      } catch (error) {
+        console.error(`Erro ao fazer upload do arquivo ${file.name}:`, error);
+        throw new Error(`Falha no upload do arquivo ${file.name}`);
+      }
+    }
+    
+    return uploadedFiles;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +158,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
     }
 
     // Validate file attachments
-    const maxFileSize = 50 * 1024 * 1024; // 50MB (keeping existing limit)
+    const maxFileSize = 50 * 1024 * 1024; // 50MB
     
     for (const file of files) {
       if (file.size > maxFileSize) {
@@ -129,7 +173,12 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
 
     setIsLoading(true);
     try {
-      await onSubmit(sanitizedTitle, sanitizedDescription, files);
+      // Upload dos arquivos para o Supabase Storage
+      const uploadedFiles = await uploadFilesToSupabase(files);
+      
+      // Enviar dados do caso com URLs dos arquivos
+      await onSubmit(sanitizedTitle, sanitizedDescription, uploadedFiles);
+      
       toast({
         title: "Caso criado com sucesso!",
         description: "Seu caso foi enviado para análise da IA.",
@@ -138,7 +187,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
       console.error("Error submitting case:", error);
       toast({
         title: "Erro ao criar caso",
-        description: "Tente novamente em alguns instantes.",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
     } finally {
@@ -221,7 +270,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
                 Clique para selecionar arquivos ou arraste e solte aqui
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                PDF, DOC, DOCX, TXT, JPG, PNG, GIF
+                PDF, DOC, DOCX, TXT, CSV, JSON, JPG, PNG, GIF
               </p>
             </div>
 
@@ -229,7 +278,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+              accept=".pdf,.doc,.docx,.txt,.csv,.json,.jpg,.jpeg,.png,.gif"
               onChange={handleFileSelect}
               className="hidden"
               disabled={isLoading}

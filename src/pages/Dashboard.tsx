@@ -105,7 +105,7 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
     }
   };
 
-  const handleNewCase = async (title: string, description: string, files: File[]) => {
+  const handleNewCase = async (title: string, description: string, attachmentUrls: { filename: string; url: string; contentType: string; size: number }[]) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -113,12 +113,12 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      // Preparar dados dos anexos para upload
-      const attachments = files.map(file => ({
-        filename: file.name,
-        file_size: file.size,
-        content_type: file.type,
-        file_url: '' // Será preenchido após o upload se necessário
+      // Preparar dados dos anexos já uploadados
+      const attachments = attachmentUrls.map(attachment => ({
+        filename: attachment.filename,
+        file_size: attachment.size,
+        content_type: attachment.contentType,
+        file_url: attachment.url
       }));
 
       const caseData = {
