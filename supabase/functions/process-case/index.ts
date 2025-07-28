@@ -115,13 +115,21 @@ serve(async (req) => {
       .eq('id', caseId);
 
     // Criar log inicial
-    await supabase
+    const { data: logData, error: logError } = await supabase
       .from('ai_processing_logs')
       .insert({
         case_id: caseId,
         user_id: user.id,
         status: 'processing'
-      });
+      })
+      .select('id')
+      .single();
+
+    if (logError) {
+      throw new Error(`Erro ao criar log: ${logError.message}`);
+    }
+    
+    const logId = logData.id;
 
     let aiResponse = '';
     let modelUsed = 'mock';
@@ -570,6 +578,17 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       .update({ status: 'completed' })
       .eq('id', caseId);
 
+    // Atualizar log de processamento para concluído
+    await supabase
+      .from('ai_processing_logs')
+      .update({ 
+        status: 'completed',
+        ai_response: aiResponse,
+        model_used: modelUsed,
+        processing_time: processingTime
+      })
+      .eq('id', logId);
+
     console.log(`Caso ${caseId} processado com sucesso em ${processingTime}ms. Anexos processados: ${processedAttachments}/${caseDataWithAttachments.attachments?.length || 0}`);
 
     return new Response(JSON.stringify({ 
@@ -588,22 +607,30 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
     console.error('Erro ao processar caso:', error);
 
     // Tentar atualizar o status para falha se possível
-    if (req.url.includes('caseId')) {
-      try {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-        const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-        
-        const { caseId } = await req.json().catch(() => ({}));
-        if (caseId) {
-          await supabase
-            .from('cases')
-            .update({ status: 'failed' })
-            .eq('id', caseId);
-        }
-      } catch (updateError) {
-        console.error('Erro ao atualizar status de falha:', updateError);
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+      
+      const { caseId } = await req.json().catch(() => ({}));
+      if (caseId) {
+        await supabase
+          .from('cases')
+          .update({ status: 'failed' })
+          .eq('id', caseId);
+
+        // Atualizar log de processamento para erro
+        await supabase
+          .from('ai_processing_logs')
+          .update({ 
+            status: 'error',
+            error_message: error.message
+          })
+          .eq('case_id', caseId)
+          .eq('status', 'processing');
       }
+    } catch (updateError) {
+      console.error('Erro ao atualizar status de falha:', updateError);
     }
 
     return new Response(JSON.stringify({ 
