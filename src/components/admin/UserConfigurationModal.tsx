@@ -130,7 +130,7 @@ const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModa
         .from('ai_settings')
         .select('*')
         .eq('user_id', user.user_id)
-        .single();
+        .maybeSingle();
 
       if (aiData) {
         setAiConfig({
@@ -156,7 +156,7 @@ const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModa
         .from('default_prompts')
         .select('*')
         .eq('user_id', user.user_id)
-        .single();
+        .maybeSingle();
 
       if (promptData) {
         setDefaultPrompt(promptData.prompt_text);
@@ -191,7 +191,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
         .select('id')
         .eq('user_id', user.user_id)
         .eq('provider', aiConfig.provider)
-        .single();
+        .maybeSingle();
 
       let aiError;
       if (existingSettings) {
@@ -229,7 +229,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
         .from('default_prompts')
         .select('id')
         .eq('user_id', user.user_id)
-        .single();
+        .maybeSingle();
 
       let promptError;
       if (existingPrompt) {
