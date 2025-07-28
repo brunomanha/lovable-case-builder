@@ -57,7 +57,7 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
         .select('role')
         .eq('user_id', user.id)
         .eq('role', 'admin')
-        .single();
+        .maybeSingle();
 
       if (!userRole) {
         toast({
@@ -68,11 +68,12 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
         return;
       }
 
-      // Carregar estatísticas
-      const [usersResult, casesResult, processingLogsResult] = await Promise.all([
-        supabase.from('profiles').select('id'),
+      // Carregar estatísticas de TODO o sistema (não filtrado por usuário)
+      const [usersResult, casesResult, processingLogsResult, usageStatsResult] = await Promise.all([
+        supabase.from('profiles').select('id, created_at'),
         supabase.from('cases').select('id, created_at, user_id'),
-        supabase.from('ai_processing_logs').select('processing_time, created_at')
+        supabase.from('ai_processing_logs').select('processing_time, created_at'),
+        supabase.from('usage_stats').select('api_requests, cases_processed')
       ]);
 
       const totalUsers = usersResult.data?.length || 0;
