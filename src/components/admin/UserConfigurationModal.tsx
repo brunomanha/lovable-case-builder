@@ -114,6 +114,8 @@ const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModa
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [resetingPassword, setResetingPassword] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const { toast } = useToast();
@@ -372,7 +374,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
     );
   };
 
-  const handleSendPasswordReset = async () => {
+  const handleResetPassword = async () => {
     if (!user?.email) {
       toast({
         title: "Erro",
@@ -382,38 +384,62 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       return;
     }
 
-    console.log('Iniciando reset de senha para usuário admin:', user.email);
+    if (!newPassword.trim()) {
+      toast({
+        title: "Senha obrigatória",
+        description: "Por favor, insira uma nova senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Senhas não conferem",
+        description: "A confirmação de senha deve ser igual à nova senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setResetingPassword(true);
     
     try {
-      const redirectUrl = `${window.location.origin}/auth`;
-      console.log('URL de redirecionamento admin:', redirectUrl);
-      
-      const { data, error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: redirectUrl,
+      // Usar a API admin do Supabase para atualizar a senha do usuário
+      const { error } = await supabase.auth.admin.updateUserById(user.user_id, {
+        password: newPassword
       });
 
-      console.log('Resposta do reset admin:', { data, error });
-
       if (error) {
-        console.error('Admin reset password error:', error);
+        console.error('Erro ao redefinir senha:', error);
         toast({
-          title: "Erro ao enviar email",
-          description: `Erro: ${error.message}. Verifique se o email está correto.`,
+          title: "Erro ao redefinir senha",
+          description: error.message,
           variant: "destructive",
         });
       } else {
-        console.log('Email de reset admin enviado com sucesso');
         toast({
-          title: "Email enviado!",
-          description: `Link de redefinição de senha enviado para ${user.email}.`,
+          title: "Senha redefinida!",
+          description: `Nova senha definida para ${user.email}.`,
         });
+        setNewPassword("");
+        setConfirmPassword("");
+        setShowResetPassword(false);
       }
     } catch (error: any) {
-      console.error('Erro inesperado no reset admin:', error);
+      console.error('Erro inesperado ao redefinir senha:', error);
       toast({
         title: "Erro inesperado",
-        description: `Erro: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
+        description: error.message || "Erro ao redefinir senha. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -702,44 +728,78 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex items-start gap-4 p-4 border rounded-lg">
-                      <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <h4 className="font-medium">Redefinir Senha</h4>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Enviar um link de redefinição de senha para o email do usuário.
+                          Defina uma nova senha para o usuário.
                         </p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          <strong>Email:</strong> {user.email}
+                          <strong>Usuário:</strong> {user.email}
                         </p>
                       </div>
                       <Button
                         variant="outline"
-                        onClick={handleSendPasswordReset}
-                        disabled={resetingPassword}
+                        onClick={() => setShowResetPassword(!showResetPassword)}
                       >
-                        {resetingPassword ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Enviando...
-                          </>
-                        ) : (
-                          <>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Enviar Link
-                          </>
-                        )}
+                        <Lock className="mr-2 h-4 w-4" />
+                        {showResetPassword ? 'Cancelar' : 'Redefinir Senha'}
                       </Button>
                     </div>
 
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <div className="flex items-start gap-2">
-                        <div className="text-yellow-600">⚠️</div>
-                        <div className="text-sm text-yellow-800">
-                          <strong>Importante:</strong> O usuário receberá um email com um link para redefinir a senha. 
-                          Este link é válido por um tempo limitado e pode ser usado apenas uma vez.
+                    {showResetPassword && (
+                      <div className="p-4 border rounded-lg bg-muted/20 space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="new-password">Nova Senha</Label>
+                          <Input
+                            id="new-password"
+                            type="password"
+                            placeholder="Digite a nova senha"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            disabled={resetingPassword}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                          <Input
+                            id="confirm-password"
+                            type="password"
+                            placeholder="Confirme a nova senha"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            disabled={resetingPassword}
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setShowResetPassword(false);
+                              setNewPassword("");
+                              setConfirmPassword("");
+                            }}
+                            disabled={resetingPassword}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            onClick={handleResetPassword}
+                            disabled={resetingPassword}
+                          >
+                            {resetingPassword ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Redefinindo...
+                              </>
+                            ) : (
+                              'Confirmar Nova Senha'
+                            )}
+                          </Button>
                         </div>
                       </div>
-                    </div>
+                    )}
+
 
                     <div className="flex items-start gap-4 p-4 border rounded-lg">
                       <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
