@@ -18,13 +18,30 @@ const Index = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Verificar se o usuário tem aprovação
+        // Primeiro verificar se é admin
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        const isUserAdmin = !!roleData;
+        setIsAdmin(isUserAdmin);
+
+        // Se é admin, permitir acesso direto
+        if (isUserAdmin) {
+          setLoading(false);
+          return;
+        }
+
+        // Para usuários normais, verificar aprovação
         const { data: approvalData } = await supabase
           .from('user_approvals')
           .select('status')
           .eq('user_id', session.user.id)
           .eq('status', 'approved')
-          .single();
+          .maybeSingle();
 
         // Se não tem aprovação, fazer logout
         if (!approvalData) {
@@ -35,16 +52,6 @@ const Index = () => {
           setLoading(false);
           return;
         }
-
-        // Verificar se o usuário é admin
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .single();
-        
-        setIsAdmin(!!roleData);
       } else {
         setIsAdmin(false);
       }
@@ -58,13 +65,30 @@ const Index = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Verificar se o usuário tem aprovação
+        // Primeiro verificar se é admin
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        const isUserAdmin = !!roleData;
+        setIsAdmin(isUserAdmin);
+
+        // Se é admin, permitir acesso direto
+        if (isUserAdmin) {
+          setLoading(false);
+          return;
+        }
+
+        // Para usuários normais, verificar aprovação
         const { data: approvalData } = await supabase
           .from('user_approvals')
           .select('status')
           .eq('user_id', session.user.id)
           .eq('status', 'approved')
-          .single();
+          .maybeSingle();
 
         // Se não tem aprovação, fazer logout
         if (!approvalData) {
@@ -75,16 +99,6 @@ const Index = () => {
           setLoading(false);
           return;
         }
-
-        // Verificar se o usuário é admin
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .single();
-        
-        setIsAdmin(!!roleData);
       } else {
         setIsAdmin(false);
       }
