@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { CaseCard, Case } from "@/components/dashboard/CaseCard";
 import { NewCaseForm } from "@/components/forms/NewCaseForm";
 import { CaseDetailsModal } from "@/components/modals/CaseDetailsModal";
-import { SettingsModal } from "@/components/modals/SettingsModal";
+
 import { ProfileModal } from "@/components/modals/ProfileModal";
 import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,7 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewCaseForm, setShowNewCaseForm] = useState(false);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
+  
   const [showProfile, setShowProfile] = useState(false);
   const [demoLimitation, setDemoLimitation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -355,7 +355,7 @@ Sistema IARA - Análise Inteligente de Casos
   if (showNewCaseForm) {
     return (
       <div className="min-h-screen bg-background">
-        <Header user={user} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} onOpenProfile={() => setShowProfile(true)} />
+        <Header user={user} onLogout={onLogout} onOpenProfile={() => setShowProfile(true)} />
         <main className="container mx-auto px-4 py-8">
           <NewCaseForm
             onSubmit={handleNewCase}
@@ -369,7 +369,7 @@ Sistema IARA - Análise Inteligente de Casos
   if (loading) {
     return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} onOpenProfile={() => setShowProfile(true)} />
+      <Header user={user} onLogout={onLogout} onOpenProfile={() => setShowProfile(true)} />
       <main className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -384,7 +384,7 @@ Sistema IARA - Análise Inteligente de Casos
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} onOpenProfile={() => setShowProfile(true)} />
+      <Header user={user} onLogout={onLogout} onOpenProfile={() => setShowProfile(true)} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
@@ -520,11 +520,6 @@ Sistema IARA - Análise Inteligente de Casos
         />
       )}
 
-      {/* Modal de configurações */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
 
       {/* Modal de perfil */}
       <ProfileModal

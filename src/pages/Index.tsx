@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AuthPage from "./AuthPage";
 import Dashboard from "./Dashboard";
+import AdminDashboard from "./AdminDashboard";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 
@@ -8,19 +9,50 @@ const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Verificar se o usuário é admin
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        setIsAdmin(!!roleData);
+      } else {
+        setIsAdmin(false);
+      }
+      
       setLoading(false);
     });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Verificar se o usuário é admin
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        setIsAdmin(!!roleData);
+      } else {
+        setIsAdmin(false);
+      }
+      
       setLoading(false);
     });
 
@@ -31,6 +63,7 @@ const Index = () => {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
+    setIsAdmin(false);
   };
 
   if (loading) {
@@ -45,13 +78,27 @@ const Index = () => {
     return <AuthPage />;
   }
 
+  const userProps = {
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+    email: user.email || '',
+    id: user.id
+  };
+
+  // Se o usuário é admin, mostrar painel administrativo
+  if (isAdmin) {
+    return (
+      <AdminDashboard 
+        user={userProps}
+        session={session}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  // Caso contrário, mostrar dashboard normal
   return (
     <Dashboard 
-      user={{
-        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
-        email: user.email || '',
-        id: user.id
-      }}
+      user={userProps}
       session={session}
       onLogout={handleLogout}
     />
