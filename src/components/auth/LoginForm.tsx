@@ -61,7 +61,13 @@ export function LoginForm({
   };
   return <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
       <CardHeader className="space-y-1 pb-6">
-        <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Logon IARA</CardTitle>
+        <div className="flex justify-center mb-2">
+          <img 
+            src="/src/assets/iara-logo.png" 
+            alt="IARA Logo" 
+            className="h-16 w-auto"
+          />
+        </div>
         <CardDescription className="text-center text-muted-foreground">Inteligência Aplicada e Relatórios de Autos</CardDescription>
       </CardHeader>
       <CardContent>
