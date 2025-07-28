@@ -254,31 +254,61 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          birth_date: string | null
+          city: string | null
+          company: string | null
           created_at: string
+          department: string | null
           display_name: string | null
+          document_number: string | null
           email: string | null
           id: string
           is_active: boolean
+          phone: string | null
+          position: string | null
+          state: string | null
           updated_at: string
           user_id: string
+          zip_code: string | null
         }
         Insert: {
+          address?: string | null
+          birth_date?: string | null
+          city?: string | null
+          company?: string | null
           created_at?: string
+          department?: string | null
           display_name?: string | null
+          document_number?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          phone?: string | null
+          position?: string | null
+          state?: string | null
           updated_at?: string
           user_id: string
+          zip_code?: string | null
         }
         Update: {
+          address?: string | null
+          birth_date?: string | null
+          city?: string | null
+          company?: string | null
           created_at?: string
+          department?: string | null
           display_name?: string | null
+          document_number?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          phone?: string | null
+          position?: string | null
+          state?: string | null
           updated_at?: string
           user_id?: string
+          zip_code?: string | null
         }
         Relationships: []
       }
@@ -383,6 +413,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_user_completely: {
+        Args: { user_id_to_delete: string }
+        Returns: boolean
+      }
       has_role: {
         Args: { _user_id: string; _role: string }
         Returns: boolean
