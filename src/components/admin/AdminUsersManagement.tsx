@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Shield, User, Settings, Plus } from "lucide-react";
+import UserConfigurationModal from "./UserConfigurationModal";
 
 interface UserProfile {
   id: string;
@@ -234,30 +234,12 @@ const AdminUsersManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog para configurações do usuário */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Configurações do Usuário</DialogTitle>
-            <DialogDescription>
-              Gerencie as configurações de IA e prompts para {selectedUser?.display_name || selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              As configurações de IA e prompts padrão agora são gerenciadas apenas por administradores.
-              Em breve, você poderá configurar essas opções diretamente aqui.
-            </p>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Modal para configurações do usuário */}
+      <UserConfigurationModal
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        user={selectedUser}
+      />
     </div>
   );
 };

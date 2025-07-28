@@ -18,6 +18,24 @@ const Index = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // Verificar se o usuário tem aprovação
+        const { data: approvalData } = await supabase
+          .from('user_approvals')
+          .select('status')
+          .eq('user_id', session.user.id)
+          .eq('status', 'approved')
+          .single();
+
+        // Se não tem aprovação, fazer logout
+        if (!approvalData) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+
         // Verificar se o usuário é admin
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -40,6 +58,24 @@ const Index = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // Verificar se o usuário tem aprovação
+        const { data: approvalData } = await supabase
+          .from('user_approvals')
+          .select('status')
+          .eq('user_id', session.user.id)
+          .eq('status', 'approved')
+          .single();
+
+        // Se não tem aprovação, fazer logout
+        if (!approvalData) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+
         // Verificar se o usuário é admin
         const { data: roleData } = await supabase
           .from('user_roles')

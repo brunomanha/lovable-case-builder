@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { PendingApprovalMessage } from "@/components/auth/PendingApprovalMessage";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPendingApproval, setShowPendingApproval] = useState(false);
   const { toast } = useToast();
 
   const handleLogin = async (email: string, password: string) => {
@@ -64,10 +66,7 @@ export default function AuthPage() {
 
           if (approvalError) throw approvalError;
 
-          toast({
-            title: "Solicitação enviada!",
-            description: "Seu cadastro foi enviado para aprovação. Você receberá um email quando for aprovado.",
-          });
+          setShowPendingApproval(true);
         } catch (approvalError: any) {
           console.error("Approval request error:", approvalError);
           toast({
@@ -90,7 +89,14 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {isLogin ? (
+        {showPendingApproval ? (
+          <PendingApprovalMessage 
+            onBackToLogin={() => {
+              setShowPendingApproval(false);
+              setIsLogin(true);
+            }}
+          />
+        ) : isLogin ? (
           <LoginForm
             onLogin={handleLogin}
             onSwitchToRegister={() => setIsLogin(false)}

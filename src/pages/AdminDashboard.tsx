@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Users, FileText, Activity, Settings, Shield } from "lucide-react";
 import AdminUsersManagement from "@/components/admin/AdminUsersManagement";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
+import AdminUserApprovals from "@/components/admin/AdminUserApprovals";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 interface AdminDashboardProps {
@@ -159,10 +160,14 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="approvals" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Aprovações
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -182,6 +187,10 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
             <AdminDashboardStats stats={stats} />
           </TabsContent>
 
+          <TabsContent value="approvals">
+            <AdminUserApprovals />
+          </TabsContent>
+          
           <TabsContent value="users">
             <AdminUsersManagement />
           </TabsContent>
