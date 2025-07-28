@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Case } from "@/components/dashboard/CaseCard";
 import { AttachmentViewer } from "@/components/attachments/AttachmentViewer";
+import { ProcessingLogsDisplay } from "@/components/dashboard/ProcessingLogsDisplay";
 import { 
   FileText, 
   Clock, 
@@ -183,6 +184,11 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                 </div>
               </div>
             </div>
+
+            <Separator />
+
+            {/* Log do Processamento */}
+            <ProcessingLogsDisplay caseId={caseItem.id} />
 
             {/* Resposta da IA */}
             {caseItem.aiResponse && (
