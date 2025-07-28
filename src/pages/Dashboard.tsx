@@ -41,6 +41,7 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [demoLimitation, setDemoLimitation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

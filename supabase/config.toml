@@ -1,10 +1,34 @@
 project_id = "hvcfntuwyhgfbbdruihq"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_confirmations = false
+
 [functions.process-case]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-case]
 verify_jwt = true
 
 [functions.get-cases]
 verify_jwt = true
+
+[functions.test-ai-connection]
+verify_jwt = true
+
+[functions.request-approval]
+verify_jwt = false
+
+[functions.approve-user]
+verify_jwt = false

@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_processing_logs: {
+        Row: {
+          ai_response: string | null
+          case_id: string
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          model_used: string | null
+          processing_time: number | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          case_id: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          model_used?: string | null
+          processing_time?: number | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          case_id?: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          model_used?: string | null
+          processing_time?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_responses: {
         Row: {
           case_id: string
@@ -180,6 +222,36 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_limitations: {
+        Row: {
+          cases_created: number
+          created_at: string
+          email: string
+          id: string
+          max_cases_allowed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cases_created?: number
+          created_at?: string
+          email: string
+          id?: string
+          max_cases_allowed?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cases_created?: number
+          created_at?: string
+          email?: string
+          id?: string
+          max_cases_allowed?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -202,6 +274,42 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_approvals: {
+        Row: {
+          approval_date: string | null
+          approved_by: string | null
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approval_date?: string | null
+          approved_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approval_date?: string | null
+          approved_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }

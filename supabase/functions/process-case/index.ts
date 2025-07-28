@@ -114,6 +114,15 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', caseId);
 
+    // Criar log inicial
+    await supabase
+      .from('ai_processing_logs')
+      .insert({
+        case_id: caseId,
+        user_id: user.id,
+        status: 'processing'
+      });
+
     let aiResponse = '';
     let modelUsed = 'mock';
     const startTime = Date.now();

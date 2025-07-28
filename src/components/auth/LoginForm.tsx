@@ -105,6 +105,46 @@ export function LoginForm({
             </Button>
           </p>
         </div>
+
+        {/* Seção de Marketing */}
+        <div className="mt-8 p-6 bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg border">
+          <h3 className="text-lg font-semibold text-center mb-4">
+            🤖 IARA - Inteligência Aplicada e Relatórios de Autos
+          </h3>
+          
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <span className="text-primary">✓</span>
+              <span><strong>Análise Inteligente:</strong> IA avançada para análise de documentos jurídicos</span>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <span className="text-primary">✓</span>
+              <span><strong>Múltiplos Formatos:</strong> PDF, Word, imagens e documentos de texto</span>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <span className="text-primary">✓</span>
+              <span><strong>Relatórios Detalhados:</strong> Resumos, análises e recomendações personalizadas</span>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <span className="text-primary">✓</span>
+              <span><strong>Interface Intuitiva:</strong> Fácil de usar, resultados em minutos</span>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <span className="text-primary">✓</span>
+              <span><strong>Segurança Garantida:</strong> Seus documentos protegidos com criptografia</span>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-primary/10 rounded text-center">
+            <p className="text-xs font-medium text-primary">
+              🚀 Transforme sua análise jurídica com o poder da IA
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>;
 }

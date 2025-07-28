@@ -40,33 +40,48 @@ export default function AuthPage() {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: {
-            name: name,
-          },
-        },
+          data: { name }
+        }
       });
 
-      if (error) {
-        toast({
-          title: "Erro no registro",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Conta criada com sucesso!",
-          description: `Bem-vindo, ${name}!`,
-        });
+      if (error) throw error;
+
+      // Enviar solicitação de aprovação
+      if (data.user) {
+        try {
+          const { error: approvalError } = await supabase.functions.invoke('request-approval', {
+            body: {
+              userId: data.user.id,
+              email: email,
+              displayName: name
+            }
+          });
+
+          if (approvalError) throw approvalError;
+
+          toast({
+            title: "Solicitação enviada!",
+            description: "Seu cadastro foi enviado para aprovação. Você receberá um email quando for aprovado.",
+          });
+        } catch (approvalError: any) {
+          console.error("Approval request error:", approvalError);
+          toast({
+            title: "Conta criada",
+            description: "Conta criada mas houve erro no processo de aprovação. Entre em contato com o suporte.",
+            variant: "destructive",
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Registration error:", error);
       toast({
-        title: "Erro no registro",
-        description: "Erro inesperado. Tente novamente.",
+        title: "Erro no cadastro",
+        description: error.message,
         variant: "destructive",
       });
     }
