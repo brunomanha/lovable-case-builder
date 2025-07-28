@@ -13,50 +13,59 @@ const Index = () => {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Primeiro verificar se é admin
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-        
-        const isUserAdmin = !!roleData;
-        setIsAdmin(isUserAdmin);
+        // Defer Supabase calls to prevent deadlock
+        setTimeout(async () => {
+          try {
+            // Primeiro verificar se é admin
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .eq('role', 'admin')
+              .maybeSingle();
+            
+            const isUserAdmin = !!roleData;
+            setIsAdmin(isUserAdmin);
 
-        // Se é admin, permitir acesso direto
-        if (isUserAdmin) {
-          setLoading(false);
-          return;
-        }
+            // Se é admin, permitir acesso direto
+            if (isUserAdmin) {
+              setLoading(false);
+              return;
+            }
 
-        // Para usuários normais, verificar aprovação
-        const { data: approvalData } = await supabase
-          .from('user_approvals')
-          .select('status')
-          .eq('user_id', session.user.id)
-          .eq('status', 'approved')
-          .maybeSingle();
+            // Para usuários normais, verificar aprovação
+            const { data: approvalData } = await supabase
+              .from('user_approvals')
+              .select('status')
+              .eq('user_id', session.user.id)
+              .eq('status', 'approved')
+              .maybeSingle();
 
-        // Se não tem aprovação, fazer logout
-        if (!approvalData) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
+            // Se não tem aprovação, fazer logout
+            if (!approvalData) {
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setIsAdmin(false);
+              setLoading(false);
+              return;
+            }
+            
+            setLoading(false);
+          } catch (error) {
+            console.error('Erro ao verificar permissões:', error);
+            setLoading(false);
+          }
+        }, 0);
       } else {
         setIsAdmin(false);
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     // THEN check for existing session
