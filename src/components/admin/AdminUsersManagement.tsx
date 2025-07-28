@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Shield, User, Settings, Plus } from "lucide-react";
+import { Search, Shield, User, Settings, Plus, Trash2 } from "lucide-react";
 import UserConfigurationModal from "./UserConfigurationModal";
 
 interface UserProfile {
@@ -130,6 +130,60 @@ const AdminUsersManagement = () => {
     setIsDialogOpen(true);
   };
 
+  const handleDeleteUser = async (user: UserProfile) => {
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.display_name || user.email}?`)) {
+      return;
+    }
+
+    try {
+      // Excluir user_roles
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', user.user_id);
+
+      // Excluir ai_settings
+      await supabase
+        .from('ai_settings')
+        .delete()
+        .eq('user_id', user.user_id);
+
+      // Excluir default_prompts
+      await supabase
+        .from('default_prompts')
+        .delete()
+        .eq('user_id', user.user_id);
+
+      // Excluir user_approvals
+      await supabase
+        .from('user_approvals')
+        .delete()
+        .eq('user_id', user.user_id);
+
+      // Excluir profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', user.user_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário excluído com sucesso.",
+      });
+
+      loadUsers();
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir usuário.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -212,14 +266,25 @@ const AdminUsersManagement = () => {
                     {new Date(user.created_at).toLocaleDateString('pt-BR')}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleManageUserSettings(user)}
-                    >
-                      <Settings className="h-3 w-3 mr-1" />
-                      Configurar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleManageUserSettings(user)}
+                      >
+                        <Settings className="h-3 w-3 mr-1" />
+                        Configurar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Excluir
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
