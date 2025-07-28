@@ -17,9 +17,10 @@ interface HeaderProps {
   };
   onLogout: () => void;
   onOpenSettings?: () => void;
+  onOpenProfile?: () => void;
 }
 
-export function Header({ user, onLogout, onOpenSettings }: HeaderProps) {
+export function Header({ user, onLogout, onOpenSettings, onOpenProfile }: HeaderProps) {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -34,7 +35,7 @@ export function Header({ user, onLogout, onOpenSettings }: HeaderProps) {
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-primary-hover p-1">
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-background border border-border p-1">
               <img 
                 src={iaraLogo} 
                 alt="IARA Logo" 
@@ -46,7 +47,7 @@ export function Header({ user, onLogout, onOpenSettings }: HeaderProps) {
                 IARA
               </h1>
               <p className="text-xs text-muted-foreground">
-                Assistente Jurídica Inteligente
+                Inteligência Aplicada e Relatórios de Autos
               </p>
             </div>
           </div>
@@ -70,10 +71,12 @@ export function Header({ user, onLogout, onOpenSettings }: HeaderProps) {
               </p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              Perfil
-            </DropdownMenuItem>
+            {onOpenProfile && (
+              <DropdownMenuItem className="cursor-pointer" onClick={onOpenProfile}>
+                <User className="mr-2 h-4 w-4" />
+                Perfil
+              </DropdownMenuItem>
+            )}
             {onOpenSettings && (
               <DropdownMenuItem className="cursor-pointer" onClick={onOpenSettings}>
                 <Settings className="mr-2 h-4 w-4" />
