@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2, Search } from "lucide-react";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
+import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2, Search, Lock, Mail } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -112,6 +113,8 @@ const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModa
   const [modelSearchTerm, setModelSearchTerm] = useState("");
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetingPassword, setResetingPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -357,6 +360,45 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
     );
   };
 
+  const handleSendPasswordReset = async () => {
+    if (!user?.email) {
+      toast({
+        title: "Erro",
+        description: "Email do usuário não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetingPassword(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email enviado!",
+          description: `Link de redefinição de senha enviado para ${user.email}.`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+    } finally {
+      setResetingPassword(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -378,7 +420,7 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
           </div>
         ) : (
           <Tabs defaultValue="ai-services" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="ai-services" className="flex items-center gap-2">
                 <Bot className="h-4 w-4" />
                 Serviços de IA
@@ -386,6 +428,10 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
               <TabsTrigger value="prompt" className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
                 Prompt Padrão
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Segurança
               </TabsTrigger>
             </TabsList>
 
@@ -590,6 +636,63 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                       Este prompt será usado como base para todas as análises de casos. 
                       Seja específico sobre o formato de resposta desejado.
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="security" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lock className="h-5 w-5" />
+                    Configurações de Segurança
+                  </CardTitle>
+                  <CardDescription>
+                    Gerencie configurações de segurança para {user.display_name || user.email}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4 p-4 border rounded-lg">
+                      <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-medium">Redefinir Senha</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Enviar um link de redefinição de senha para o email do usuário.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          <strong>Email:</strong> {user.email}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={handleSendPasswordReset}
+                        disabled={resetingPassword}
+                      >
+                        {resetingPassword ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Enviar Link
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2">
+                        <div className="text-yellow-600">⚠️</div>
+                        <div className="text-sm text-yellow-800">
+                          <strong>Importante:</strong> O usuário receberá um email com um link para redefinir a senha. 
+                          Este link é válido por um tempo limitado e pode ser usado apenas uma vez.
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Mail, Calendar } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
+import { User, Mail, Calendar, Lock } from "lucide-react";
 import { useState } from "react";
 
 interface ProfileModalProps {
@@ -18,6 +20,7 @@ interface ProfileModalProps {
 
 export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   const [name, setName] = useState(user.name);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const getInitials = (name: string) => {
     return name
@@ -29,8 +32,9 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -88,6 +92,22 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
             </div>
           </div>
 
+          {/* Segurança */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Segurança
+            </Label>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => setShowChangePassword(true)}
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Alterar Senha
+            </Button>
+          </div>
+
           {/* Ações */}
           <div className="flex gap-3 pt-4">
             <Button variant="outline" onClick={onClose} className="flex-1">
@@ -105,6 +125,12 @@ export function ProfileModal({ isOpen, onClose, user }: ProfileModalProps) {
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
+    </>
   );
 }

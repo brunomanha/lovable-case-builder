@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 interface LoginFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -17,6 +18,7 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const {
     toast
   } = useToast();
@@ -59,16 +61,19 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  return <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
-      <CardHeader className="space-y-1 pb-6">
+  return <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm mx-auto">
+      <CardHeader className="space-y-1 pb-4 sm:pb-6">
         <div className="flex justify-center mb-2">
           <img 
             src="/src/assets/iara-logo.png" 
             alt="IARA Logo" 
-            className="h-16 w-auto"
+            className="h-12 sm:h-16 w-auto"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
         </div>
-        <CardDescription className="text-center text-muted-foreground">Inteligência Aplicada e Relatórios de Autos</CardDescription>
+        <CardDescription className="text-center text-muted-foreground text-sm">Inteligência Aplicada e Relatórios de Autos</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -101,6 +106,17 @@ export function LoginForm({
                 Entrando...
               </> : "Entrar"}
           </Button>
+          
+          <div className="mt-4 text-center">
+            <Button 
+              variant="link" 
+              className="p-0 h-auto text-sm text-muted-foreground hover:text-primary" 
+              onClick={() => setShowForgotPassword(true)}
+              disabled={isLoading}
+            >
+              Esqueci minha senha
+            </Button>
+          </div>
         </form>
 
         <div className="mt-6 text-center">
@@ -113,9 +129,9 @@ export function LoginForm({
         </div>
 
         {/* Seção de Marketing */}
-        <div className="mt-8 p-6 bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg border">
-          <h3 className="text-lg font-semibold text-center mb-4">
-            🤖 IARA - Inteligência Aplicada e Relatórios de Autos
+        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-gradient-to-br from-primary/5 to-accent/10 rounded-lg border">
+          <h3 className="text-base sm:text-lg font-semibold text-center mb-3 sm:mb-4">
+            IARA - Inteligência Aplicada e Relatórios de Autos
           </h3>
           
           <div className="space-y-3 text-sm text-muted-foreground">
@@ -152,5 +168,10 @@ export function LoginForm({
           </div>
         </div>
       </CardContent>
+      
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </Card>;
 }
