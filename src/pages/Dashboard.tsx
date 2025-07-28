@@ -305,7 +305,7 @@ Data de Criação: ${caseToDownload.createdAt.toLocaleDateString('pt-BR')}
 Anexos: ${caseToDownload.attachmentsCount} arquivo(s)
 
 =================================================
-ANÁLISE DA IA
+ANÁLISE
 =================================================
 ${caseToDownload.aiResponse || 'Análise ainda não disponível. O caso pode não ter sido processado pela IA ainda.'}
 
@@ -319,7 +319,7 @@ Sistema IARA - Análise Inteligente de Casos
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `relatorio-caso-${caseToDownload.id.slice(0, 8)}.txt`;
+      a.download = `${caseToDownload.title.replace(/[^a-zA-Z0-9-_]/g, '_')}.txt`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

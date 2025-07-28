@@ -181,7 +181,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
       
       toast({
         title: "Caso criado com sucesso!",
-        description: "Seu caso foi enviado para análise da IA.",
+        description: "Seu caso foi enviado para análise.",
       });
     } catch (error) {
       console.error("Error submitting case:", error);

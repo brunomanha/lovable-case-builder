@@ -191,28 +191,8 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-success" />
-                    Análise da IA
+                    Análise
                   </h3>
-                  
-                  {/* Indicador de anexos analisados */}
-                  {attachments.length > 0 && (
-                    <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium text-primary">Anexos Processados pela IA</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        A IA analisou {attachments.filter(a => 
-                          a.content_type.includes('text/') || 
-                          a.content_type.includes('application/json')
-                        ).length} de {attachments.length} anexos automaticamente. 
-                        {attachments.some(a => 
-                          a.content_type.includes('application/pdf') || 
-                          a.content_type.includes('image/')
-                        ) && ' Arquivos PDF e imagens foram referenciados na análise.'}
-                      </p>
-                    </div>
-                  )}
                   
                   <div className="bg-gradient-to-br from-success/5 to-success/10 border border-success/20 rounded-lg p-6">
                     <div className="prose max-w-none">
@@ -290,7 +270,7 @@ Data de Criação: ${caseItem.createdAt.toLocaleDateString('pt-BR')}
 Anexos: ${caseItem.attachmentsCount} arquivo(s)
 
 =================================================
-ANÁLISE DA IA
+ANÁLISE
 =================================================
 ${caseItem.aiResponse || 'Análise ainda não disponível.'}
 
@@ -304,7 +284,7 @@ Sistema IARA - Análise Inteligente de Casos
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `relatorio-caso-${caseItem.id.slice(0, 8)}.txt`;
+                a.download = `${caseItem.title.replace(/[^a-zA-Z0-9-_]/g, '_')}.txt`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

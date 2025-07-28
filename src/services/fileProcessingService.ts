@@ -252,7 +252,7 @@ class FileProcessingService {
       };
       
     } catch (error) {
-      console.error('Erro na análise da IA:', error);
+      console.error('Erro na análise:', error);
       
       return {
         files: processedFiles,
