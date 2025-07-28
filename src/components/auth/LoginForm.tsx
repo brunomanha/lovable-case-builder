@@ -65,7 +65,7 @@ export function LoginForm({
       <CardHeader className="space-y-1 pb-4 sm:pb-6">
         <div className="flex justify-center mb-2">
           <img 
-            src="/src/assets/iara-logo.png" 
+            src="/iara-logo.png" 
             alt="IARA Logo" 
             className="h-12 sm:h-16 w-auto"
             onError={(e) => {

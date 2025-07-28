@@ -42,14 +42,16 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
 
     setIsLoading(true);
     try {
+      const redirectUrl = `${window.location.origin}/auth?reset=true`;
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: redirectUrl,
       });
 
       if (error) {
+        console.error('Reset password error:', error);
         toast({
           title: "Erro",
-          description: error.message,
+          description: "Erro ao enviar email de recuperação. Verifique se o email está correto.",
           variant: "destructive",
         });
       } else {

@@ -12,7 +12,7 @@ export default function AuthPage() {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -23,7 +23,33 @@ export default function AuthPage() {
           description: error.message,
           variant: "destructive",
         });
-      } else {
+        return;
+      }
+
+      if (data.user) {
+        // Verificar se o usuário está ativo
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_active')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Erro ao verificar perfil:', profileError);
+          return;
+        }
+
+        if (profile && !profile.is_active) {
+          // Fazer logout imediatamente se conta estiver inativa
+          await supabase.auth.signOut();
+          toast({
+            title: "Conta inativa",
+            description: "Sua conta foi desativada. Entre em contato com o administrador.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta!",

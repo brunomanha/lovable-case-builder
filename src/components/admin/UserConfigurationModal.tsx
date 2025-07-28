@@ -115,6 +115,7 @@ const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModa
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetingPassword, setResetingPassword] = useState(false);
+  const [isActive, setIsActive] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -175,6 +176,17 @@ Por favor, analise cuidadosamente o caso apresentado e forneça:
 5. **Considerações Importantes**: Alertas e observações relevantes
 
 Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`);
+      }
+
+      // Carregar status do usuário
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_active')
+        .eq('user_id', user.user_id)
+        .maybeSingle();
+
+      if (profileData) {
+        setIsActive(profileData.is_active);
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -396,6 +408,31 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       });
     } finally {
       setResetingPassword(false);
+    }
+  };
+
+  const handleToggleUserStatus = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: !isActive })
+        .eq('user_id', user.user_id);
+
+      if (error) throw error;
+
+      setIsActive(!isActive);
+      toast({
+        title: "Status atualizado",
+        description: `Usuário ${!isActive ? 'ativado' : 'desativado'} com sucesso.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar status do usuário.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -690,6 +727,39 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                         <div className="text-sm text-yellow-800">
                           <strong>Importante:</strong> O usuário receberá um email com um link para redefinir a senha. 
                           Este link é válido por um tempo limitado e pode ser usado apenas uma vez.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4 p-4 border rounded-lg">
+                      <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-medium">Status da Conta</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Controle se o usuário pode fazer login no sistema.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          <strong>Status atual:</strong> {isActive ? 'Ativo' : 'Inativo'}
+                        </p>
+                      </div>
+                      <Button
+                        variant={isActive ? "destructive" : "default"}
+                        onClick={handleToggleUserStatus}
+                      >
+                        {isActive ? 'Desativar Conta' : 'Ativar Conta'}
+                      </Button>
+                    </div>
+
+                    <div className={`${isActive ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4`}>
+                      <div className="flex items-start gap-2">
+                        <div className={isActive ? 'text-red-600' : 'text-blue-600'}>
+                          {isActive ? '🔓' : '🔒'}
+                        </div>
+                        <div className={`text-sm ${isActive ? 'text-red-800' : 'text-blue-800'}`}>
+                          <strong>{isActive ? 'Conta Ativa:' : 'Conta Inativa:'}</strong> {isActive 
+                            ? 'O usuário pode fazer login e acessar o sistema normalmente.'
+                            : 'O usuário não pode fazer login. Tentativas de login resultarão em mensagem de erro e logout automático.'
+                          }
                         </div>
                       </div>
                     </div>
