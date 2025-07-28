@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Search, Shield, User, Settings, Plus, Trash2 } from "lucide-react";
 import UserConfigurationModal from "./UserConfigurationModal";
+import { CreateUserModal } from "./CreateUserModal";
 
 interface UserProfile {
   id: string;
@@ -18,6 +19,10 @@ interface UserProfile {
   email: string | null;
   created_at: string;
   role?: string;
+  phone?: string | null;
+  company?: string | null;
+  position?: string | null;
+  is_active?: boolean;
 }
 
 const AdminUsersManagement = () => {
@@ -27,6 +32,7 @@ const AdminUsersManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -131,46 +137,21 @@ const AdminUsersManagement = () => {
   };
 
   const handleDeleteUser = async (user: UserProfile) => {
-    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.display_name || user.email}?`)) {
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.display_name || user.email}? Esta ação não pode ser desfeita.`)) {
       return;
     }
 
     try {
-      // Excluir user_roles
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', user.user_id);
-
-      // Excluir ai_settings
-      await supabase
-        .from('ai_settings')
-        .delete()
-        .eq('user_id', user.user_id);
-
-      // Excluir default_prompts
-      await supabase
-        .from('default_prompts')
-        .delete()
-        .eq('user_id', user.user_id);
-
-      // Excluir user_approvals
-      await supabase
-        .from('user_approvals')
-        .delete()
-        .eq('user_id', user.user_id);
-
-      // Excluir profile
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', user.user_id);
+      // Usar a função do banco para deletar completamente o usuário
+      const { error } = await supabase.rpc('delete_user_completely', {
+        user_id_to_delete: user.user_id
+      });
 
       if (error) throw error;
 
       toast({
         title: "Sucesso",
-        description: "Usuário excluído com sucesso.",
+        description: "Usuário excluído completamente do sistema.",
       });
 
       loadUsers();
@@ -209,15 +190,21 @@ const AdminUsersManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Barra de pesquisa */}
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar usuários..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
+          {/* Barra de pesquisa e botão de criar usuário */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar usuários..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+            <Button onClick={() => setIsCreateUserOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Usuário
+            </Button>
           </div>
 
           {/* Tabela de usuários */}
@@ -226,7 +213,9 @@ const AdminUsersManagement = () => {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Empresa</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Data de Criação</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
@@ -238,6 +227,7 @@ const AdminUsersManagement = () => {
                     {user.display_name || "Não informado"}
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.company || "Não informado"}</TableCell>
                   <TableCell>
                     <Select
                       value={user.role}
@@ -261,6 +251,11 @@ const AdminUsersManagement = () => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={user.is_active ? "default" : "secondary"}>
+                      {user.is_active ? "Ativo" : "Inativo"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     {new Date(user.created_at).toLocaleDateString('pt-BR')}
@@ -304,6 +299,13 @@ const AdminUsersManagement = () => {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         user={selectedUser}
+      />
+
+      {/* Modal para criar usuário */}
+      <CreateUserModal
+        isOpen={isCreateUserOpen}
+        onClose={() => setIsCreateUserOpen(false)}
+        onUserCreated={loadUsers}
       />
     </div>
   );

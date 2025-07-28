@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
-import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2, Search, Lock, Mail } from "lucide-react";
+import { Settings, Save, Bot, Key, Zap, TestTube, CheckCircle, XCircle, Loader2, Search, Lock, Mail, User } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -18,6 +18,16 @@ interface UserProfile {
   display_name: string | null;
   email: string | null;
   role?: string;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  company?: string | null;
+  position?: string | null;
+  department?: string | null;
+  birth_date?: string | null;
+  document_number?: string | null;
 }
 
 type AIProvider = 'openrouter' | 'openai' | 'anthropic' | 'deepseek' | 'groq';
@@ -101,6 +111,20 @@ interface UserConfigurationModalProps {
 
 const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModalProps) => {
   const [defaultPrompt, setDefaultPrompt] = useState("");
+  const [userProfile, setUserProfile] = useState({
+    display_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    company: "",
+    position: "",
+    department: "",
+    birth_date: "",
+    document_number: ""
+  });
   const [aiConfig, setAiConfig] = useState<AIConfig>({
     provider: 'deepseek',
     apiKey: '',
@@ -131,6 +155,31 @@ const UserConfigurationModal = ({ isOpen, onClose, user }: UserConfigurationModa
     
     setLoading(true);
     try {
+      // Carregar dados do perfil completo
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.user_id)
+        .single();
+
+      if (profileData) {
+        setUserProfile({
+          display_name: profileData.display_name || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          address: profileData.address || "",
+          city: profileData.city || "",
+          state: profileData.state || "",
+          zip_code: profileData.zip_code || "",
+          company: profileData.company || "",
+          position: profileData.position || "",
+          department: profileData.department || "",
+          birth_date: profileData.birth_date || "",
+          document_number: profileData.document_number || ""
+        });
+        setIsActive(profileData.is_active);
+      }
+
       // Carregar configurações de IA
       const { data: aiData } = await supabase
         .from('ai_settings')
@@ -179,17 +228,6 @@ Por favor, analise cuidadosamente o caso apresentado e forneça:
 
 Seja objetivo, profissional e forneça insights valiosos baseados nas informações apresentadas.`);
       }
-
-      // Carregar status do usuário
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('is_active')
-        .eq('user_id', user.user_id)
-        .maybeSingle();
-
-      if (profileData) {
-        setIsActive(profileData.is_active);
-      }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
     } finally {
@@ -202,6 +240,35 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
 
     setSaving(true);
     try {
+      // Atualizar perfil do usuário
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          display_name: userProfile.display_name.trim() || null,
+          email: userProfile.email.trim() || null,
+          phone: userProfile.phone.trim() || null,
+          address: userProfile.address.trim() || null,
+          city: userProfile.city.trim() || null,
+          state: userProfile.state.trim() || null,
+          zip_code: userProfile.zip_code.trim() || null,
+          company: userProfile.company.trim() || null,
+          position: userProfile.position.trim() || null,
+          department: userProfile.department.trim() || null,
+          birth_date: userProfile.birth_date || null,
+          document_number: userProfile.document_number.trim() || null
+        })
+        .eq('user_id', user.user_id);
+
+      if (profileError) throw profileError;
+
+      // Atualizar email no auth.users se mudou
+      if (userProfile.email !== user.email && userProfile.email.trim()) {
+        const { error: emailError } = await supabase.auth.admin.updateUserById(user.user_id, {
+          email: userProfile.email.trim()
+        });
+        if (emailError) throw emailError;
+      }
+
       // Verificar se já existe configuração para este usuário
       const { data: existingSettings } = await supabase
         .from('ai_settings')
@@ -492,8 +559,12 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <Tabs defaultValue="ai-services" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Perfil
+              </TabsTrigger>
               <TabsTrigger value="ai-services" className="flex items-center gap-2">
                 <Bot className="h-4 w-4" />
                 Serviços de IA
@@ -507,6 +578,146 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
                 Segurança
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="profile" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Informações do Usuário
+                  </CardTitle>
+                  <CardDescription>
+                    Gerencie as informações pessoais e profissionais do usuário
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="display_name">Nome Completo</Label>
+                      <Input
+                        id="display_name"
+                        value={userProfile.display_name}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, display_name: e.target.value }))}
+                        placeholder="Nome completo"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={userProfile.email}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="email@exemplo.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        value={userProfile.phone}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="document_number">Documento</Label>
+                      <Input
+                        id="document_number"
+                        value={userProfile.document_number}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, document_number: e.target.value }))}
+                        placeholder="CPF/CNPJ"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Endereço</Label>
+                    <Input
+                      id="address"
+                      value={userProfile.address}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="Rua, número, complemento"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input
+                        id="city"
+                        value={userProfile.city}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, city: e.target.value }))}
+                        placeholder="Cidade"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">Estado</Label>
+                      <Input
+                        id="state"
+                        value={userProfile.state}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, state: e.target.value }))}
+                        placeholder="SP"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zip_code">CEP</Label>
+                      <Input
+                        id="zip_code"
+                        value={userProfile.zip_code}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, zip_code: e.target.value }))}
+                        placeholder="00000-000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company">Empresa</Label>
+                      <Input
+                        id="company"
+                        value={userProfile.company}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, company: e.target.value }))}
+                        placeholder="Nome da empresa"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="department">Departamento</Label>
+                      <Input
+                        id="department"
+                        value={userProfile.department}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, department: e.target.value }))}
+                        placeholder="Departamento"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="position">Cargo</Label>
+                      <Input
+                        id="position"
+                        value={userProfile.position}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, position: e.target.value }))}
+                        placeholder="Cargo/posição"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="birth_date">Data de Nascimento</Label>
+                      <Input
+                        id="birth_date"
+                        type="date"
+                        value={userProfile.birth_date}
+                        onChange={(e) => setUserProfile(prev => ({ ...prev, birth_date: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="ai-services" className="space-y-6">
               <Card>
