@@ -13,10 +13,8 @@ interface ChangePasswordModalProps {
 }
 
 export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProps) {
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +23,9 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    console.log("ChangePasswordModal: Starting password change process");
+    
+    if (!newPassword || !confirmPassword) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
@@ -54,39 +54,22 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
 
     setIsLoading(true);
     try {
-      // Primeiro, verificar a senha atual tentando fazer login
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user?.email) {
-        throw new Error("Usuário não encontrado");
-      }
-
-      // Tentar fazer login com a senha atual para verificar se está correta
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.user.email,
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        toast({
-          title: "Senha atual incorreta",
-          description: "A senha atual informada está incorreta.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Atualizar para a nova senha
+      console.log("ChangePasswordModal: Updating password...");
+      
+      // Atualizar diretamente para a nova senha - Supabase permite isso para usuários autenticados
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (updateError) {
+        console.error("ChangePasswordModal: Error updating password:", updateError);
         toast({
           title: "Erro ao alterar senha",
           description: updateError.message,
           variant: "destructive",
         });
       } else {
+        console.log("ChangePasswordModal: Password updated successfully");
         toast({
           title: "Senha alterada!",
           description: "Sua senha foi alterada com sucesso.",
@@ -94,6 +77,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
         handleClose();
       }
     } catch (error: any) {
+      console.error("ChangePasswordModal: Unexpected error:", error);
       toast({
         title: "Erro",
         description: error.message || "Ocorreu um erro inesperado.",
@@ -105,10 +89,8 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
   };
 
   const handleClose = () => {
-    setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setShowCurrentPassword(false);
     setShowNewPassword(false);
     setShowConfirmPassword(false);
     onClose();
@@ -122,32 +104,6 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Senha Atual</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="current-password"
-                type={showCurrentPassword ? "text" : "password"}
-                placeholder="Sua senha atual"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="pl-10 pr-10"
-                disabled={isLoading}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-12 px-3 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                disabled={isLoading}
-              >
-                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="new-password">Nova Senha</Label>
             <div className="relative">
