@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users, FileText, Activity, Settings, Shield } from "lucide-react";
+import { Search, Users, FileText, Activity, Settings, Shield, Monitor } from "lucide-react";
 import AdminUsersManagement from "@/components/admin/AdminUsersManagement";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
 import AdminUserApprovals from "@/components/admin/AdminUserApprovals";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
+import SystemMonitor from "@/components/admin/SystemMonitor";
 
 interface AdminDashboardProps {
   user: {
@@ -161,7 +162,7 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Dashboard
@@ -177,6 +178,10 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
             <TabsTrigger value="cases" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Casos
+            </TabsTrigger>
+            <TabsTrigger value="monitor" className="flex items-center gap-2">
+              <Monitor className="h-4 w-4" />
+              Monitor
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -208,6 +213,10 @@ const AdminDashboard = ({ user, session, onLogout }: AdminDashboardProps) => {
                 <p className="text-muted-foreground">Em desenvolvimento...</p>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="monitor">
+            <SystemMonitor />
           </TabsContent>
 
           <TabsContent value="settings">
