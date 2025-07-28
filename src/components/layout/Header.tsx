@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings, User } from "lucide-react";
-import iaraLogo from "@/assets/iara-logo.png";
 
 interface HeaderProps {
   user: {
@@ -37,9 +36,12 @@ export function Header({ user, onLogout, onOpenSettings, onOpenProfile }: Header
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg overflow-hidden bg-background border border-border p-1">
               <img 
-                src={iaraLogo} 
+                src="/iara-logo.png" 
                 alt="IARA Logo" 
                 className="w-full h-full object-contain rounded-md"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
               />
             </div>
             <div>
