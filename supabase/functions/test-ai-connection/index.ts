@@ -23,14 +23,12 @@ serve(async (req) => {
       throw new Error('Token de autorização não encontrado');
     }
 
-    // Create Supabase client with the user's token
-    const token = authHeader.replace('Bearer ', '');
-    const supabaseWithAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Get user from the token
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser(token);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       console.error('Auth error:', authError);
       throw new Error('Usuário não autenticado');
