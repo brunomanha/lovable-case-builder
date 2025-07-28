@@ -382,28 +382,38 @@ Seja objetivo, profissional e forneça insights valiosos baseados nas informaç�
       return;
     }
 
+    console.log('Iniciando reset de senha para usuário admin:', user.email);
     setResetingPassword(true);
+    
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/`,
+      const redirectUrl = `${window.location.origin}/auth`;
+      console.log('URL de redirecionamento admin:', redirectUrl);
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: redirectUrl,
       });
 
+      console.log('Resposta do reset admin:', { data, error });
+
       if (error) {
+        console.error('Admin reset password error:', error);
         toast({
-          title: "Erro",
-          description: error.message,
+          title: "Erro ao enviar email",
+          description: `Erro: ${error.message}. Verifique se o email está correto.`,
           variant: "destructive",
         });
       } else {
+        console.log('Email de reset admin enviado com sucesso');
         toast({
           title: "Email enviado!",
           description: `Link de redefinição de senha enviado para ${user.email}.`,
         });
       }
     } catch (error: any) {
+      console.error('Erro inesperado no reset admin:', error);
       toast({
-        title: "Erro",
-        description: error.message || "Ocorreu um erro inesperado.",
+        title: "Erro inesperado",
+        description: `Erro: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
         variant: "destructive",
       });
     } finally {

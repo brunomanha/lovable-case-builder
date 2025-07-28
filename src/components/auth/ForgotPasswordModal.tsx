@@ -41,30 +41,38 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
     }
 
     setIsLoading(true);
+    console.log('Iniciando reset de senha para:', email.trim());
+    
     try {
-      const redirectUrl = `${window.location.origin}/auth?reset=true`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const redirectUrl = `${window.location.origin}/auth`;
+      console.log('URL de redirecionamento:', redirectUrl);
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: redirectUrl,
       });
 
+      console.log('Resposta do reset:', { data, error });
+
       if (error) {
-        console.error('Reset password error:', error);
+        console.error('Reset password error details:', error);
         toast({
-          title: "Erro",
-          description: "Erro ao enviar email de recuperação. Verifique se o email está correto.",
+          title: "Erro ao enviar email",
+          description: `Erro: ${error.message}. Verifique se o email está cadastrado no sistema.`,
           variant: "destructive",
         });
       } else {
+        console.log('Email de reset enviado com sucesso');
         setEmailSent(true);
         toast({
           title: "Email enviado!",
           description: "Verifique sua caixa de entrada para redefinir sua senha.",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro inesperado no reset:', error);
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        title: "Erro inesperado",
+        description: `Erro: ${error.message || 'Erro desconhecido'}. Tente novamente.`,
         variant: "destructive",
       });
     } finally {
