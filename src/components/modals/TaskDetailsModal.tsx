@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Case } from "@/components/dashboard/CaseCard";
+import { Task } from "@/components/dashboard/TaskCard";
 import { AttachmentViewer } from "@/components/attachments/AttachmentViewer";
 import { ProcessingLogsDisplay } from "@/components/dashboard/ProcessingLogsDisplay";
 import { 
@@ -26,8 +26,8 @@ import { ptBR } from "date-fns/locale";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface CaseDetailsModalProps {
-  case: Case;
+interface TaskDetailsModalProps {
+  task: Task;
   onClose: () => void;
 }
 
@@ -67,22 +67,22 @@ const statusConfig = {
   },
 };
 
-export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalProps) {
+export function TaskDetailsModal({ task: taskItem, onClose }: TaskDetailsModalProps) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isLoadingAttachments, setIsLoadingAttachments] = useState(false);
   
-  const status = statusConfig[caseItem.status];
+  const status = statusConfig[taskItem.status];
   const StatusIcon = status.icon;
 
   useEffect(() => {
     const loadAttachments = async () => {
       setIsLoadingAttachments(true);
       try {
-        console.log('Carregando anexos para caso:', caseItem.id);
+        console.log('Carregando anexos para tarefa:', taskItem.id);
         const { data, error } = await supabase
           .from('attachments')
           .select('*')
-          .eq('case_id', caseItem.id)
+          .eq('case_id', taskItem.id)
           .order('created_at', { ascending: true });
 
         if (error) {
@@ -98,10 +98,10 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
       }
     };
 
-    if (caseItem.id) {
+    if (taskItem.id) {
       loadAttachments();
     }
-  }, [caseItem.id]);
+  }, [taskItem.id]);
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
@@ -110,10 +110,10 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <DialogTitle className="text-xl font-bold text-left">
-                {caseItem.title}
+                {taskItem.title}
               </DialogTitle>
               <DialogDescription className="text-left mt-2">
-                {caseItem.description}
+                {taskItem.description}
               </DialogDescription>
             </div>
             <Badge className={`${status.color} flex items-center gap-1 shrink-0`}>
@@ -133,7 +133,7 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                   <span>Data de criação</span>
                 </div>
                 <p className="font-medium">
-                  {format(caseItem.createdAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                  {format(taskItem.createdAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
                 </p>
               </div>
               
@@ -143,7 +143,7 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                   <span>Anexos</span>
                 </div>
                 <p className="font-medium">
-                  {caseItem.attachmentsCount} arquivo{caseItem.attachmentsCount !== 1 ? 's' : ''}
+                  {taskItem.attachmentsCount} arquivo{taskItem.attachmentsCount !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -164,7 +164,7 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
               ) : (
                 <AttachmentViewer 
                   attachments={attachments} 
-                  showAnalysisStatus={caseItem.status === 'completed'} 
+                  showAnalysisStatus={taskItem.status === 'completed'} 
                 />
               )}
             </div>
@@ -188,10 +188,10 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
             <Separator />
 
             {/* Log do Processamento */}
-            <ProcessingLogsDisplay caseId={caseItem.id} />
+            <ProcessingLogsDisplay caseId={taskItem.id} />
 
             {/* Resposta da IA */}
-            {caseItem.aiResponse && (
+            {taskItem.aiResponse && (
               <>
                 <Separator />
                 <div className="space-y-3">
@@ -203,7 +203,7 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                   <div className="bg-gradient-to-br from-success/5 to-success/10 border border-success/20 rounded-lg p-6">
                     <div className="prose max-w-none">
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {caseItem.aiResponse}
+                        {taskItem.aiResponse}
                       </p>
                     </div>
                   </div>
@@ -219,32 +219,32 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
                 <div className="flex gap-3">
                   <div className="w-2 h-2 bg-success rounded-full mt-2"></div>
                   <div>
-                    <p className="font-medium text-sm">Caso criado</p>
+                    <p className="font-medium text-sm">Tarefa criada</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(caseItem.createdAt, "dd/MM/yyyy HH:mm")}
+                      {format(taskItem.createdAt, "dd/MM/yyyy HH:mm")}
                     </p>
                   </div>
                 </div>
                 
-                {caseItem.status !== "pending" && (
+                {taskItem.status !== "pending" && (
                   <div className="flex gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-sm">Processamento iniciado</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(caseItem.createdAt.getTime() + 2000), "dd/MM/yyyy HH:mm")}
+                        {format(new Date(taskItem.createdAt.getTime() + 2000), "dd/MM/yyyy HH:mm")}
                       </p>
                     </div>
                   </div>
                 )}
                 
-                {caseItem.status === "completed" && (
+                {taskItem.status === "completed" && (
                   <div className="flex gap-3">
                     <div className="w-2 h-2 bg-success rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-sm">Análise concluída</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(caseItem.createdAt.getTime() + 8000), "dd/MM/yyyy HH:mm")}
+                        {format(new Date(taskItem.createdAt.getTime() + 8000), "dd/MM/yyyy HH:mm")}
                       </p>
                     </div>
                   </div>
@@ -259,30 +259,30 @@ export function CaseDetailsModal({ case: caseItem, onClose }: CaseDetailsModalPr
           <Button variant="outline" onClick={onClose} className="flex-1">
             Fechar
           </Button>
-          {caseItem.status === "completed" && (
+          {taskItem.status === "completed" && (
             <Button 
               className="flex-1 bg-gradient-to-r from-primary to-primary-hover"
               onClick={() => {
                 // Criar conteúdo do relatório
-                const reportContent = `RELATÓRIO DE ANÁLISE - CASO ${caseItem.id}
+                const reportContent = `RELATÓRIO DE ANÁLISE - TAREFA ${taskItem.id}
 
 =================================================
 INFORMAÇÕES GERAIS
 =================================================
-Título: ${caseItem.title}
-Descrição: ${caseItem.description}
-Status: ${caseItem.status}
-Data de Criação: ${caseItem.createdAt.toLocaleDateString('pt-BR')}
-Anexos: ${caseItem.attachmentsCount} arquivo(s)
+Título: ${taskItem.title}
+Descrição: ${taskItem.description}
+Status: ${taskItem.status}
+Data de Criação: ${taskItem.createdAt.toLocaleDateString('pt-BR')}
+Anexos: ${taskItem.attachmentsCount} arquivo(s)
 
 =================================================
 ANÁLISE
 =================================================
-${caseItem.aiResponse || 'Análise ainda não disponível.'}
+${taskItem.aiResponse || 'Análise ainda não disponível.'}
 
 =================================================
 Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
-Sistema IARA - Análise Inteligente de Casos
+Sistema IARA - Assistente Virtual
 =================================================`;
 
                 // Criar e baixar arquivo
@@ -290,7 +290,7 @@ Sistema IARA - Análise Inteligente de Casos
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${caseItem.title.replace(/[^a-zA-Z0-9-_]/g, '_')}.txt`;
+                a.download = `${taskItem.title.replace(/[^a-zA-Z0-9-_]/g, '_')}.txt`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

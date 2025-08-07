@@ -5,7 +5,7 @@ import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download, Trash2, Play 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export interface Case {
+export interface Task {
   id: string;
   title: string;
   description: string;
@@ -16,12 +16,12 @@ export interface Case {
   hasAiResponse?: boolean;
 }
 
-interface CaseCardProps {
-  case: Case;
-  onProcessCase: (id: string) => void;
-  onViewCase: (id: string) => void;
-  onDownloadCase: (id: string) => void;
-  onDeleteCase?: (id: string) => void;
+interface TaskCardProps {
+  task: Task;
+  onProcessTask: (id: string) => void;
+  onViewTask: (id: string) => void;
+  onDownloadTask: (id: string) => void;
+  onDeleteTask?: (id: string) => void;
 }
 
 const statusConfig = {
@@ -47,8 +47,8 @@ const statusConfig = {
   },
 };
 
-export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownloadCase, onDeleteCase }: CaseCardProps) {
-  const status = statusConfig[caseItem.status];
+export function TaskCard({ task: taskItem, onProcessTask, onViewTask, onDownloadTask, onDeleteTask }: TaskCardProps) {
+  const status = statusConfig[taskItem.status];
   const StatusIcon = status.icon;
 
   return (
@@ -57,10 +57,10 @@ export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownload
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-semibold text-lg text-card-foreground line-clamp-1 group-hover:text-primary transition-colors">
-              {caseItem.title}
+              {taskItem.title}
             </h3>
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {caseItem.description}
+              {taskItem.description}
             </p>
           </div>
           <Badge className={`${status.color} ml-3 flex items-center gap-1`}>
@@ -74,11 +74,11 @@ export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownload
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <FileText className="h-4 w-4" />
-            <span>{caseItem.attachmentsCount} arquivo{caseItem.attachmentsCount !== 1 ? 's' : ''}</span>
+            <span>{taskItem.attachmentsCount} arquivo{taskItem.attachmentsCount !== 1 ? 's' : ''}</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            <span>{format(caseItem.createdAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+            <span>{format(taskItem.createdAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
           </div>
         </div>
       </CardContent>
@@ -88,17 +88,17 @@ export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownload
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onViewCase(caseItem.id)}
+            onClick={() => onViewTask(taskItem.id)}
             className="flex-1 group-hover:border-primary/30 transition-colors"
           >
             <Eye className="h-4 w-4 mr-1" />
             Ver Detalhes
           </Button>
           
-          {caseItem.status === "pending" && (
+          {taskItem.status === "pending" && (
             <Button
               size="sm"
-              onClick={() => onProcessCase(caseItem.id)}
+              onClick={() => onProcessTask(taskItem.id)}
               className="flex-1 bg-gradient-to-r from-primary to-primary-hover"
             >
               <Play className="h-4 w-4 mr-1" />
@@ -106,11 +106,11 @@ export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownload
             </Button>
           )}
           
-          {caseItem.status === "completed" && (
+          {taskItem.status === "completed" && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDownloadCase(caseItem.id)}
+              onClick={() => onDownloadTask(taskItem.id)}
               className="flex-1 group-hover:border-primary/30 transition-colors"
             >
               <Download className="h-4 w-4 mr-1" />
@@ -118,11 +118,11 @@ export function CaseCard({ case: caseItem, onProcessCase, onViewCase, onDownload
             </Button>
           )}
 
-          {onDeleteCase && (
+          {onDeleteTask && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDeleteCase(caseItem.id)}
+              onClick={() => onDeleteTask(taskItem.id)}
               className="text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />

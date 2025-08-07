@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/Header";
-import { CaseCard, Case } from "@/components/dashboard/CaseCard";
-import { NewCaseForm } from "@/components/forms/NewCaseForm";
-import { CaseDetailsModal } from "@/components/modals/CaseDetailsModal";
+import { TaskCard, Task } from "@/components/dashboard/TaskCard";
+import { NewTaskForm } from "@/components/forms/NewTaskForm";
+import { TaskDetailsModal } from "@/components/modals/TaskDetailsModal";
 
 import { ProfileModal } from "@/components/modals/ProfileModal";
 import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
@@ -22,7 +22,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-interface DatabaseCase {
+interface DatabaseTask {
   id: string;
   title: string;
   description: string;
@@ -34,11 +34,11 @@ interface DatabaseCase {
 }
 
 export default function Dashboard({ user, session, onLogout }: DashboardProps) {
-  const [cases, setCases] = useState<Case[]>([]);
-  const [filteredCases, setFilteredCases] = useState<Case[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showNewCaseForm, setShowNewCaseForm] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
   const [showProfile, setShowProfile] = useState(false);
   const [demoLimitation, setDemoLimitation] = useState<any>(null);
@@ -46,23 +46,23 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadCases();
+    loadTasks();
   }, []);
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredCases(cases);
+      setFilteredTasks(tasks);
     } else {
-      const filtered = cases.filter(
-        (case_) =>
-          case_.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          case_.description.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = tasks.filter(
+        (task_) =>
+          task_.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          task_.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredCases(filtered);
+      setFilteredTasks(filtered);
     }
-  }, [searchTerm, cases]);
+  }, [searchTerm, tasks]);
 
-  const loadCases = async () => {
+  const loadTasks = async () => {
     try {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -78,37 +78,37 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
       }
 
       if (response.data?.success && response.data.cases) {
-        const transformedCases: Case[] = response.data.cases.map((dbCase: DatabaseCase) => ({
-          id: dbCase.id,
-          title: dbCase.title,
-          description: dbCase.description,
-          status: dbCase.status === 'failed' ? 'error' : dbCase.status,
-          createdAt: new Date(dbCase.created_at),
-          attachmentsCount: dbCase.attachments?.[0]?.count || 0,
+        const transformedTasks: Task[] = response.data.cases.map((dbTask: DatabaseTask) => ({
+          id: dbTask.id,
+          title: dbTask.title,
+          description: dbTask.description,
+          status: dbTask.status === 'failed' ? 'error' : dbTask.status,
+          createdAt: new Date(dbTask.created_at),
+          attachmentsCount: dbTask.attachments?.[0]?.count || 0,
           aiResponse: undefined, // Será carregado quando abrir o modal
-          hasAiResponse: dbCase.ai_responses?.[0]?.count > 0
+          hasAiResponse: dbTask.ai_responses?.[0]?.count > 0
         }));
-        setCases(transformedCases);
-        setFilteredCases(transformedCases);
+        setTasks(transformedTasks);
+        setFilteredTasks(transformedTasks);
       } else {
-        setCases([]);
-        setFilteredCases([]);
+        setTasks([]);
+        setFilteredTasks([]);
       }
     } catch (error) {
-      console.error('Error loading cases:', error);
+      console.error('Error loading tasks:', error);
       toast({
-        title: "Erro ao carregar casos",
-        description: "Não foi possível carregar os casos. Tente novamente.",
+        title: "Erro ao carregar tarefas",
+        description: "Não foi possível carregar as tarefas. Tente novamente.",
         variant: "destructive",
       });
-      setCases([]);
-      setFilteredCases([]);
+      setTasks([]);
+      setFilteredTasks([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNewCase = async (title: string, description: string, attachmentUrls: { filename: string; url: string; contentType: string; size: number }[]) => {
+  const handleNewTask = async (title: string, description: string, attachmentUrls: { filename: string; url: string; contentType: string; size: number }[]) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -140,34 +140,34 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
 
       if (response.data?.success) {
         toast({
-          title: "Caso criado com sucesso!",
-          description: "Seu caso foi criado e será processado em breve.",
+          title: "Tarefa criada com sucesso!",
+          description: "Sua tarefa foi criada e será processada em breve.",
         });
-        setShowNewCaseForm(false);
-        loadCases();
+        setShowNewTaskForm(false);
+        loadTasks();
         
         // Processar automaticamente após criar
         setTimeout(() => {
-          handleProcessCase(response.data.case.id);
+          handleProcessTask(response.data.case.id);
         }, 1000);
       } else {
-        throw new Error(response.data?.error || 'Erro ao criar caso');
+        throw new Error(response.data?.error || 'Erro ao criar tarefa');
       }
     } catch (error) {
-      console.error('Error creating case:', error);
+      console.error('Error creating task:', error);
       toast({
-        title: "Erro ao criar caso",
-        description: "Não foi possível criar o caso. Tente novamente.",
+        title: "Erro ao criar tarefa",
+        description: "Não foi possível criar a tarefa. Tente novamente.",
         variant: "destructive",
       });
       throw error;
     }
   };
 
-  const handleProcessCase = async (caseId: string) => {
+  const handleProcessTask = async (taskId: string) => {
     try {
       const response = await supabase.functions.invoke('process-case', {
-        body: { caseId },
+        body: { caseId: taskId },
       });
 
       if (response.error) {
@@ -177,23 +177,23 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
       if (response.data?.success) {
         toast({
           title: "Processamento iniciado",
-          description: "O caso está sendo analisado pela IA.",
+          description: "A tarefa está sendo analisada pela IA.",
         });
-        loadCases();
+        loadTasks();
       } else {
-        throw new Error(response.data?.error || 'Erro ao processar caso');
+        throw new Error(response.data?.error || 'Erro ao processar tarefa');
       }
     } catch (error) {
-      console.error('Error processing case:', error);
+      console.error('Error processing task:', error);
       toast({
-        title: "Erro ao processar caso",
-        description: "Não foi possível processar o caso. Tente novamente.",
+        title: "Erro ao processar tarefa",
+        description: "Não foi possível processar a tarefa. Tente novamente.",
         variant: "destructive",
       });
     }
   };
 
-  const handleViewCase = async (caseId: string) => {
+  const handleViewTask = async (taskId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -201,67 +201,67 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await supabase.functions.invoke('get-cases?caseId=' + caseId);
+      const response = await supabase.functions.invoke('get-cases?caseId=' + taskId);
 
       if (response.data?.success && response.data.case) {
-        const fullCase = response.data.case;
-        const transformedCase: Case = {
-          id: fullCase.id,
-          title: fullCase.title,
-          description: fullCase.description,
-          status: fullCase.status === 'failed' ? 'error' : fullCase.status,
-          createdAt: new Date(fullCase.created_at),
-          attachmentsCount: fullCase.attachments?.length || 0,
-          aiResponse: fullCase.ai_responses?.[0]?.response_text,
-          hasAiResponse: (fullCase.ai_responses?.length || 0) > 0
+        const fullTask = response.data.case;
+        const transformedTask: Task = {
+          id: fullTask.id,
+          title: fullTask.title,
+          description: fullTask.description,
+          status: fullTask.status === 'failed' ? 'error' : fullTask.status,
+          createdAt: new Date(fullTask.created_at),
+          attachmentsCount: fullTask.attachments?.length || 0,
+          aiResponse: fullTask.ai_responses?.[0]?.response_text,
+          hasAiResponse: (fullTask.ai_responses?.length || 0) > 0
         };
-        setSelectedCase(transformedCase);
+        setSelectedTask(transformedTask);
       } else {
-        // Fallback para caso local se não conseguir carregar detalhes
-        const case_ = cases.find(c => c.id === caseId);
-        if (case_) {
-          setSelectedCase(case_);
+        // Fallback para tarefa local se não conseguir carregar detalhes
+        const task_ = tasks.find(t => t.id === taskId);
+        if (task_) {
+          setSelectedTask(task_);
         } else {
-          throw new Error('Caso não encontrado');
+          throw new Error('Tarefa não encontrada');
         }
       }
     } catch (error) {
-      console.error('Error loading case details:', error);
+      console.error('Error loading task details:', error);
       toast({
         title: "Erro ao carregar detalhes",
-        description: "Não foi possível carregar os detalhes do caso.",
+        description: "Não foi possível carregar os detalhes da tarefa.",
         variant: "destructive",
       });
     }
   };
 
-  const handleDeleteCase = async (caseId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
     try {
       const { error } = await supabase
         .from('cases')
         .delete()
-        .eq('id', caseId);
+        .eq('id', taskId);
 
       if (error) throw error;
 
       // Atualizar a lista local
-      setCases(prev => prev.filter(c => c.id !== caseId));
+      setTasks(prev => prev.filter(t => t.id !== taskId));
       
       toast({
-        title: "Caso excluído",
-        description: "O caso foi removido com sucesso.",
+        title: "Tarefa excluída",
+        description: "A tarefa foi removida com sucesso.",
       });
     } catch (error) {
-      console.error('Error deleting case:', error);
+      console.error('Error deleting task:', error);
       toast({
         title: "Erro ao excluir",
-        description: "Não foi possível remover o caso.",
+        description: "Não foi possível remover a tarefa.",
         variant: "destructive",
       });
     }
   };
 
-  const handleDownloadCase = async (caseId: string) => {
+  const handleDownloadTask = async (taskId: string) => {
     try {
       // Primeiro carregar os dados completos do caso
       const { data: { session } } = await supabase.auth.getSession();
@@ -270,51 +270,51 @@ export default function Dashboard({ user, session, onLogout }: DashboardProps) {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await supabase.functions.invoke('get-cases?caseId=' + caseId);
+      const response = await supabase.functions.invoke('get-cases?caseId=' + taskId);
 
-      let caseToDownload: Case;
+      let taskToDownload: Task;
       
       if (response.data?.success && response.data.case) {
-        const fullCase = response.data.case;
-        caseToDownload = {
-          id: fullCase.id,
-          title: fullCase.title,
-          description: fullCase.description,
-          status: fullCase.status === 'failed' ? 'error' : fullCase.status,
-          createdAt: new Date(fullCase.created_at),
-          attachmentsCount: fullCase.attachments?.length || 0,
-          aiResponse: fullCase.ai_responses?.[0]?.response_text,
-          hasAiResponse: (fullCase.ai_responses?.length || 0) > 0
+        const fullTask = response.data.case;
+        taskToDownload = {
+          id: fullTask.id,
+          title: fullTask.title,
+          description: fullTask.description,
+          status: fullTask.status === 'failed' ? 'error' : fullTask.status,
+          createdAt: new Date(fullTask.created_at),
+          attachmentsCount: fullTask.attachments?.length || 0,
+          aiResponse: fullTask.ai_responses?.[0]?.response_text,
+          hasAiResponse: (fullTask.ai_responses?.length || 0) > 0
         };
       } else {
-        // Fallback para caso local
-        const case_ = cases.find(c => c.id === caseId);
-        if (!case_) {
-          throw new Error('Caso não encontrado');
+        // Fallback para tarefa local
+        const task_ = tasks.find(t => t.id === taskId);
+        if (!task_) {
+          throw new Error('Tarefa não encontrada');
         }
-        caseToDownload = case_;
+        taskToDownload = task_;
       }
 
       // Criar conteúdo do relatório
-      const reportContent = `RELATÓRIO DE ANÁLISE - CASO ${caseToDownload.id}
+      const reportContent = `RELATÓRIO DE ANÁLISE - TAREFA ${taskToDownload.id}
 
 =================================================
 INFORMAÇÕES GERAIS
 =================================================
-Título: ${caseToDownload.title}
-Descrição: ${caseToDownload.description}
-Status: ${caseToDownload.status}
-Data de Criação: ${caseToDownload.createdAt.toLocaleDateString('pt-BR')}
-Anexos: ${caseToDownload.attachmentsCount} arquivo(s)
+Título: ${taskToDownload.title}
+Descrição: ${taskToDownload.description}
+Status: ${taskToDownload.status}
+Data de Criação: ${taskToDownload.createdAt.toLocaleDateString('pt-BR')}
+Anexos: ${taskToDownload.attachmentsCount} arquivo(s)
 
 =================================================
 ANÁLISE
 =================================================
-${caseToDownload.aiResponse || 'Análise ainda não disponível. O caso pode não ter sido processado pela IA ainda.'}
+${taskToDownload.aiResponse || 'Análise ainda não disponível. A tarefa pode não ter sido processada pela IA ainda.'}
 
 =================================================
 Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
-Sistema IARA - Análise Inteligente de Casos
+Sistema IARA - Assistente Virtual
 =================================================`;
 
       // Criar e baixar arquivo
@@ -322,7 +322,7 @@ Sistema IARA - Análise Inteligente de Casos
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${caseToDownload.title.replace(/[^a-zA-Z0-9-_]/g, '_')}.txt`;
+      a.download = `${taskToDownload.title.replace(/[^a-zA-Z0-9-_]/g, '_')}.txt`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -333,7 +333,7 @@ Sistema IARA - Análise Inteligente de Casos
         description: "O relatório foi baixado com sucesso.",
       });
     } catch (error) {
-      console.error('Error downloading case:', error);
+      console.error('Error downloading task:', error);
       toast({
         title: "Erro no download",
         description: "Não foi possível baixar o relatório.",
@@ -343,23 +343,23 @@ Sistema IARA - Análise Inteligente de Casos
   };
 
   const getStatusStats = () => {
-    const pending = cases.filter(c => c.status === "pending").length;
-    const processing = cases.filter(c => c.status === "processing").length;
-    const completed = cases.filter(c => c.status === "completed").length;
-    const failed = cases.filter(c => c.status === "error").length;
+    const pending = tasks.filter(t => t.status === "pending").length;
+    const processing = tasks.filter(t => t.status === "processing").length;
+    const completed = tasks.filter(t => t.status === "completed").length;
+    const failed = tasks.filter(t => t.status === "error").length;
     return { pending, processing, completed, failed };
   };
 
   const stats = getStatusStats();
 
-  if (showNewCaseForm) {
+  if (showNewTaskForm) {
     return (
       <div className="min-h-screen bg-background">
         <Header user={user} onLogout={onLogout} onOpenProfile={() => setShowProfile(true)} />
         <main className="container mx-auto px-4 py-8">
-          <NewCaseForm
-            onSubmit={handleNewCase}
-            onCancel={() => setShowNewCaseForm(false)}
+          <NewTaskForm
+            onSubmit={handleNewTask}
+            onCancel={() => setShowNewTaskForm(false)}
           />
         </main>
       </div>
@@ -374,7 +374,7 @@ Sistema IARA - Análise Inteligente de Casos
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Carregando casos...</p>
+              <p className="mt-4 text-muted-foreground">Carregando tarefas...</p>
             </div>
           </div>
         </main>
@@ -392,18 +392,18 @@ Sistema IARA - Análise Inteligente de Casos
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                Meus Casos
+                Minhas Tarefas
               </h1>
               <p className="text-muted-foreground">
-                Gerencie e acompanhe suas análises de IA
+                O que IARA pode ajudar você com hoje?
               </p>
             </div>
             <Button
-              onClick={() => setShowNewCaseForm(true)}
+              onClick={() => setShowNewTaskForm(true)}
               className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Novo Caso
+              Nova Tarefa
             </Button>
           </div>
 
@@ -463,7 +463,7 @@ Sistema IARA - Análise Inteligente de Casos
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar casos..."
+                placeholder="Buscar tarefas..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12"
@@ -475,36 +475,36 @@ Sistema IARA - Análise Inteligente de Casos
             </Button>
           </div>
 
-          {/* Lista de casos */}
+          {/* Lista de tarefas */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCases.map((case_) => (
-              <CaseCard
-                key={case_.id}
-                case={case_}
-                onProcessCase={handleProcessCase}
-                onViewCase={handleViewCase}
-                onDownloadCase={handleDownloadCase}
-                onDeleteCase={handleDeleteCase}
+            {filteredTasks.map((task_) => (
+              <TaskCard
+                key={task_.id}
+                task={task_}
+                onProcessTask={handleProcessTask}
+                onViewTask={handleViewTask}
+                onDownloadTask={handleDownloadTask}
+                onDeleteTask={handleDeleteTask}
               />
             ))}
           </div>
 
-          {filteredCases.length === 0 && !loading && (
+          {filteredTasks.length === 0 && !loading && (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {searchTerm ? "Nenhum caso encontrado" : "Nenhum caso criado"}
+                {searchTerm ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa criada"}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm ? "Tente ajustar sua busca" : "Crie seu primeiro caso para começar"}
+                {searchTerm ? "Tente ajustar sua busca" : "Descreva sua primeira demanda para IARA começar"}
               </p>
               {!searchTerm && (
                 <Button
-                  onClick={() => setShowNewCaseForm(true)}
+                  onClick={() => setShowNewTaskForm(true)}
                   className="bg-gradient-to-r from-primary to-primary-hover"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Criar Primeiro Caso
+                  Criar Primeira Tarefa
                 </Button>
               )}
             </div>
@@ -513,10 +513,10 @@ Sistema IARA - Análise Inteligente de Casos
       </main>
 
       {/* Modal de detalhes */}
-      {selectedCase && (
-        <CaseDetailsModal
-          case={selectedCase}
-          onClose={() => setSelectedCase(null)}
+      {selectedTask && (
+        <TaskDetailsModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
         />
       )}
 

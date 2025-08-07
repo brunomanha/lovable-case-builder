@@ -8,12 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, X, FileText, Loader2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface NewCaseFormProps {
+interface NewTaskFormProps {
   onSubmit: (title: string, description: string, attachmentUrls: { filename: string; url: string; contentType: string; size: number }[]) => Promise<void>;
   onCancel: () => void;
 }
 
-export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
+export function NewTaskForm({ onSubmit, onCancel }: NewTaskFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -180,13 +180,13 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
       await onSubmit(sanitizedTitle, sanitizedDescription, uploadedFiles);
       
       toast({
-        title: "Caso criado com sucesso!",
-        description: "Seu caso foi enviado para análise.",
+        title: "Tarefa criada com sucesso!",
+        description: "Sua demanda foi enviada para processamento.",
       });
     } catch (error) {
       console.error("Error submitting case:", error);
       toast({
-        title: "Erro ao criar caso",
+        title: "Erro ao criar tarefa",
         description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
@@ -199,10 +199,10 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
     <Card className="w-full max-w-2xl mx-auto shadow-xl border-0 bg-card">
       <CardHeader>
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
-          Novo Caso para Análise
+          Nova Tarefa para Análise
         </CardTitle>
         <CardDescription>
-          Preencha as informações e anexe os arquivos para análise pela IA
+          Descreva sua demanda e anexe os arquivos necessários. IARA irá processar tudo automaticamente.
         </CardDescription>
       </CardHeader>
       
@@ -210,7 +210,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title" className="text-sm font-medium">
-              Título do Caso *
+              Título da Tarefa *
             </Label>
             <Input
               id="title"
@@ -224,11 +224,11 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium">
-              Descrição do Caso *
+              Descrição da Demanda *
             </Label>
             <Textarea
               id="description"
-              placeholder="Descreva detalhadamente o que você gostaria que a IA analise nos documentos..."
+              placeholder="O que IARA pode ajudar você com hoje? Descreva sua demanda em detalhes..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[120px] resize-none"
@@ -267,7 +267,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
             >
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">
-                Clique para selecionar arquivos ou arraste e solte aqui
+                Upload documentos, screenshots ou notas para que IARA possa entregar resultados precisos
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 PDF, DOC, DOCX, TXT, CSV, JSON, JPG, PNG, GIF
@@ -340,7 +340,7 @@ export function NewCaseForm({ onSubmit, onCancel }: NewCaseFormProps) {
               ) : (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Enviar para Análise
+                  Criar Tarefa
                 </>
               )}
             </Button>

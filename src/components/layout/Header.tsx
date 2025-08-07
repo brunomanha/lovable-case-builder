@@ -36,7 +36,7 @@ export function Header({ user, onLogout, onOpenSettings, onOpenProfile }: Header
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg overflow-hidden bg-background border border-border p-1">
               <img 
-                src="/iara-logo.png" 
+                src="/lovable-uploads/74228248-3957-4616-a5a6-55d4638742ab.png" 
                 alt="IARA Logo" 
                 className="w-full h-full object-contain rounded-md"
                 onError={(e) => {
@@ -49,7 +49,7 @@ export function Header({ user, onLogout, onOpenSettings, onOpenProfile }: Header
                 IARA
               </h1>
               <p className="text-xs text-muted-foreground">
-                Inteligência Aplicada e Relatórios de Autos
+                Assistente Virtual
               </p>
             </div>
           </div>
