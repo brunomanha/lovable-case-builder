@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { HowItWorksModal } from "./HowItWorksModal";
-import { Eye, EyeOff, Mail, Lock, Loader2, HelpCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Loader2, HelpCircle, Zap, Target, Settings, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 interface LoginFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
   onSwitchToRegister: () => void;
@@ -64,136 +64,256 @@ export function LoginForm({
     }
   };
   return (
-    <div className="w-full max-w-md mx-auto">
-      {/* Hero Section */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-6">
-          <img 
-            src="/lovable-uploads/74228248-3957-4616-a5a6-55d4638742ab.png" 
-            alt="IARA Logo"
-            className="h-20 sm:h-24 w-auto drop-shadow-lg"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder.svg';
-            }}
-          />
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          IARA Assistente Virtual
-        </h1>
-        <p className="text-lg text-muted-foreground mb-2">
-          Seu assistente virtual para qualquer demanda.
-        </p>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          Descreva sua necessidade, envie anexos e deixe a IARA cuidar do resto.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-hidden">
+      {/* Modern Abstract Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-accent/30 to-transparent rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      {/* Login Form */}
-      <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
-        <CardContent className="p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="seu@email.com" 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)} 
-                  className="pl-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" 
-                  disabled={isLoading} 
-                />
-              </div>
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-8">
+              <img 
+                src="/lovable-uploads/74228248-3957-4616-a5a6-55d4638742ab.png" 
+                alt="IARA Assistente Virtual"
+                className="h-28 sm:h-36 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Senha
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="password" 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Sua senha" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  className="pl-10 pr-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" 
-                  disabled={isLoading} 
-                />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  className="absolute right-0 top-0 h-12 px-3 text-muted-foreground hover:text-foreground" 
-                  onClick={() => setShowPassword(!showPassword)} 
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 hover:scale-[1.02]" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                "Entrar"
-              )}
-            </Button>
-            
-            <div className="flex justify-between items-center text-sm">
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-muted-foreground hover:text-primary" 
-                onClick={() => setShowForgotPassword(true)}
-                disabled={isLoading}
-              >
-                Esqueci minha senha
-              </Button>
-              
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-muted-foreground hover:text-primary flex items-center gap-1" 
-                onClick={() => setShowHowItWorks(true)}
-                disabled={isLoading}
-              >
-                <HelpCircle className="h-3 w-3" />
-                Como funciona?
-              </Button>
-            </div>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Não tem uma conta?
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
+              Inteligência Artificial para gerenciar
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"> qualquer demanda</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-muted-foreground mb-6 max-w-3xl mx-auto leading-relaxed">
+              De tarefas simples a projetos complexos, a IARA entende, organiza e entrega soluções rápidas.
             </p>
-            <Button 
-              variant="outline" 
-              className="w-full h-12 rounded-xl border-2 font-medium hover:bg-accent transition-all duration-300" 
-              onClick={onSwitchToRegister} 
-              disabled={isLoading}
-            >
-              Criar conta
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Login Form Column */}
+            <div className="order-2 lg:order-1">
+              <div className="max-w-md mx-auto">
+                <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="text-center mb-6">
+                    <h2 className="text-xl font-semibold text-foreground mb-2">Acesse sua conta</h2>
+                    <p className="text-sm text-muted-foreground">Entre para gerenciar suas demandas</p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium">
+                        Email
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          placeholder="seu@email.com" 
+                          value={email} 
+                          onChange={e => setEmail(e.target.value)} 
+                          className="pl-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" 
+                          disabled={isLoading} 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm font-medium">
+                        Senha
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="password" 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Sua senha" 
+                          value={password} 
+                          onChange={e => setPassword(e.target.value)} 
+                          className="pl-10 pr-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" 
+                          disabled={isLoading} 
+                        />
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="absolute right-0 top-0 h-12 px-3 text-muted-foreground hover:text-foreground" 
+                          onClick={() => setShowPassword(!showPassword)} 
+                          disabled={isLoading}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 hover:scale-[1.02]" 
+                      style={{
+                        background: 'linear-gradient(135deg, hsl(178 60% 50%) 0%, hsl(271 76% 53%) 100%)',
+                        color: 'white'
+                      }}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Entrando...
+                        </>
+                      ) : (
+                        "Entrar"
+                      )}
+                    </Button>
+                    
+                    <div className="flex justify-between items-center text-sm">
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-muted-foreground hover:text-primary" 
+                        onClick={() => setShowForgotPassword(true)}
+                        disabled={isLoading}
+                      >
+                        Esqueci minha senha
+                      </Button>
+                      
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-muted-foreground hover:text-primary flex items-center gap-1" 
+                        onClick={() => setShowHowItWorks(true)}
+                        disabled={isLoading}
+                      >
+                        <HelpCircle className="h-3 w-3" />
+                        Como funciona?
+                      </Button>
+                    </div>
+                  </form>
+
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Não tem uma conta?
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-12 rounded-xl border-2 font-medium hover:bg-accent transition-all duration-300" 
+                      onClick={onSwitchToRegister} 
+                      disabled={isLoading}
+                    >
+                      Criar conta
+                    </Button>
+                  </div>
+                </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Benefits Column */}
+            <div className="order-1 lg:order-2 space-y-8">
+              {/* Commercial Benefits Section */}
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-foreground text-center lg:text-left">
+                  Por que escolher a IARA?
+                </h3>
+                
+                <div className="grid gap-4">
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 hover:shadow-md transition-all duration-300">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary-light flex items-center justify-center">
+                      <Zap className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Produtividade Máxima</h4>
+                      <p className="text-sm text-muted-foreground">Centralize e agilize todas as suas demandas em um só lugar.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 hover:shadow-md transition-all duration-300">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-success to-success/80 flex items-center justify-center">
+                      <Target className="h-5 w-5 text-success-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Inteligência Aplicada</h4>
+                      <p className="text-sm text-muted-foreground">Respostas precisas e rápidas para qualquer necessidade.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 hover:shadow-md transition-all duration-300">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center">
+                      <Settings className="h-5 w-5 text-warning-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Versatilidade Total</h4>
+                      <p className="text-sm text-muted-foreground">Funciona para qualquer nicho, de advocacia a marketing.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 hover:shadow-md transition-all duration-300">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-accent-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Organização Garantida</h4>
+                      <p className="text-sm text-muted-foreground">Fluxo claro e acompanhamento de cada tarefa.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* How It Works Section */}
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-foreground text-center lg:text-left">
+                  Como funciona
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-transparent border border-primary/20">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Envie sua demanda</p>
+                      <p className="text-sm text-muted-foreground">Descreva o que precisa e anexe arquivos</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-success/10 to-transparent border border-success/20">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-success text-success-foreground flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">A IARA analisa e organiza</p>
+                      <p className="text-sm text-muted-foreground">IA processa e estrutura sua solicitação</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-warning/10 to-transparent border border-warning/20">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-warning text-warning-foreground flex items-center justify-center font-bold text-sm">
+                      3
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Você recebe soluções</p>
+                      <p className="text-sm text-muted-foreground">Resultados precisos e organizados</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Footer */}
-      <div className="text-center mt-8 text-xs text-muted-foreground">
-        © 2024 IARA Assistente Virtual • v1.0
+      <div className="relative z-10 text-center py-8">
+        <div className="text-xs text-muted-foreground space-y-2">
+          <p>© 2024 IARA Assistente Virtual • v1.0</p>
+          <Button variant="link" className="p-0 h-auto text-xs text-muted-foreground hover:text-primary">
+            Política de Privacidade
+          </Button>
+        </div>
       </div>
       
       <ForgotPasswordModal 

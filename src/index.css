@@ -53,6 +53,8 @@
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 75%) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(215 16% 95%) 0%, hsl(215 16% 88%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(152 81% 46%) 0%, hsl(152 81% 56%) 100%);
+    --gradient-turquoise-purple: linear-gradient(135deg, hsl(178 60% 50%) 0%, hsl(271 76% 53%) 100%);
+    --gradient-hero-bg: linear-gradient(135deg, hsl(217 91% 97%) 0%, hsl(178 60% 97%) 50%, hsl(271 76% 97%) 100%);
     
     /* Sombras profissionais */
     --shadow-sm: 0 1px 2px 0 hsl(215 16% 15% / 0.05);
