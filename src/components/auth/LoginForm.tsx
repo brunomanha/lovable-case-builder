@@ -63,8 +63,7 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-hidden">
       {/* Modern Abstract Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
@@ -72,19 +71,14 @@ export function LoginForm({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-0 my-0 py-[23px] px-0">
         <div className="max-w-6xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-8">
-              <img 
-                src="/lovable-uploads/74228248-3957-4616-a5a6-55d4638742ab.png" 
-                alt="IARA Assistente Virtual"
-                className="h-28 sm:h-36 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder.svg';
-                }}
-              />
+              <img src="/lovable-uploads/74228248-3957-4616-a5a6-55d4638742ab.png" alt="IARA Assistente Virtual" className="h-28 sm:h-36 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300" onError={e => {
+              e.currentTarget.src = '/placeholder.svg';
+            }} />
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
               Inteligência Artificial para gerenciar
@@ -113,15 +107,7 @@ export function LoginForm({
                       </Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          id="email" 
-                          type="email" 
-                          placeholder="seu@email.com" 
-                          value={email} 
-                          onChange={e => setEmail(e.target.value)} 
-                          className="pl-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" 
-                          disabled={isLoading} 
-                        />
+                        <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} className="pl-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" disabled={isLoading} />
                       </div>
                     </div>
                     
@@ -131,63 +117,29 @@ export function LoginForm({
                       </Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          id="password" 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="Sua senha" 
-                          value={password} 
-                          onChange={e => setPassword(e.target.value)} 
-                          className="pl-10 pr-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" 
-                          disabled={isLoading} 
-                        />
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="absolute right-0 top-0 h-12 px-3 text-muted-foreground hover:text-foreground" 
-                          onClick={() => setShowPassword(!showPassword)} 
-                          disabled={isLoading}
-                        >
+                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Sua senha" value={password} onChange={e => setPassword(e.target.value)} className="pl-10 pr-10 h-12 rounded-xl border-2 shadow-sm transition-all focus:shadow-md focus:ring-2 focus:ring-primary/20" disabled={isLoading} />
+                        <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-12 px-3 text-muted-foreground hover:text-foreground" onClick={() => setShowPassword(!showPassword)} disabled={isLoading}>
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                       </div>
                     </div>
 
-                    <Button 
-                      type="submit" 
-                      className="w-full h-12 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 hover:scale-[1.02]" 
-                      style={{
-                        background: 'linear-gradient(135deg, hsl(178 60% 50%) 0%, hsl(271 76% 53%) 100%)',
-                        color: 'white'
-                      }}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
+                    <Button type="submit" className="w-full h-12 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 hover:scale-[1.02]" style={{
+                      background: 'linear-gradient(135deg, hsl(178 60% 50%) 0%, hsl(271 76% 53%) 100%)',
+                      color: 'white'
+                    }} disabled={isLoading}>
+                      {isLoading ? <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Entrando...
-                        </>
-                      ) : (
-                        "Entrar"
-                      )}
+                        </> : "Entrar"}
                     </Button>
                     
                     <div className="flex justify-between items-center text-sm">
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto text-muted-foreground hover:text-primary" 
-                        onClick={() => setShowForgotPassword(true)}
-                        disabled={isLoading}
-                      >
+                      <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-primary" onClick={() => setShowForgotPassword(true)} disabled={isLoading}>
                         Esqueci minha senha
                       </Button>
                       
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto text-muted-foreground hover:text-primary flex items-center gap-1" 
-                        onClick={() => setShowHowItWorks(true)}
-                        disabled={isLoading}
-                      >
+                      <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-primary flex items-center gap-1" onClick={() => setShowHowItWorks(true)} disabled={isLoading}>
                         <HelpCircle className="h-3 w-3" />
                         Como funciona?
                       </Button>
@@ -198,12 +150,7 @@ export function LoginForm({
                     <p className="text-sm text-muted-foreground mb-4">
                       Não tem uma conta?
                     </p>
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-12 rounded-xl border-2 font-medium hover:bg-accent transition-all duration-300" 
-                      onClick={onSwitchToRegister} 
-                      disabled={isLoading}
-                    >
+                    <Button variant="outline" className="w-full h-12 rounded-xl border-2 font-medium hover:bg-accent transition-all duration-300" onClick={onSwitchToRegister} disabled={isLoading}>
                       Criar conta
                     </Button>
                   </div>
@@ -316,15 +263,8 @@ export function LoginForm({
         </div>
       </div>
       
-      <ForgotPasswordModal 
-        isOpen={showForgotPassword}
-        onClose={() => setShowForgotPassword(false)}
-      />
+      <ForgotPasswordModal isOpen={showForgotPassword} onClose={() => setShowForgotPassword(false)} />
       
-      <HowItWorksModal 
-        isOpen={showHowItWorks}
-        onClose={() => setShowHowItWorks(false)}
-      />
-    </div>
-  );
+      <HowItWorksModal isOpen={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
+    </div>;
 }
