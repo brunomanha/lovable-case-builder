@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import AuthPage from "./AuthPage";
 import Dashboard from "./Dashboard";
@@ -14,6 +15,7 @@ const Index = () => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -21,33 +23,48 @@ const Index = () => {
         // Defer Supabase calls to prevent deadlock
         setTimeout(async () => {
           try {
+            console.log('Verificando permissões para usuário:', session.user.email);
+            
             // Primeiro verificar se é admin
-            const { data: roleData } = await supabase
+            const { data: roleData, error: roleError } = await supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
               .eq('role', 'admin')
               .maybeSingle();
             
+            if (roleError) {
+              console.error('Erro ao verificar role:', roleError);
+            }
+
             const isUserAdmin = !!roleData;
+            console.log('É admin?', isUserAdmin);
             setIsAdmin(isUserAdmin);
 
             // Se é admin, permitir acesso direto
             if (isUserAdmin) {
+              console.log('Usuário é admin, permitindo acesso');
               setLoading(false);
               return;
             }
 
             // Para usuários normais, verificar aprovação
-            const { data: approvalData } = await supabase
+            const { data: approvalData, error: approvalError } = await supabase
               .from('user_approvals')
               .select('status')
               .eq('user_id', session.user.id)
               .eq('status', 'approved')
               .maybeSingle();
 
+            if (approvalError) {
+              console.error('Erro ao verificar aprovação:', approvalError);
+            }
+
+            console.log('Status de aprovação:', approvalData);
+
             // Se não tem aprovação, fazer logout
             if (!approvalData) {
+              console.log('Usuário não aprovado, fazendo logout');
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
@@ -56,6 +73,7 @@ const Index = () => {
               return;
             }
             
+            console.log('Usuário aprovado, permitindo acesso');
             setLoading(false);
           } catch (error) {
             console.error('Erro ao verificar permissões:', error);
@@ -70,43 +88,63 @@ const Index = () => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Sessão existente encontrada:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Primeiro verificar se é admin
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-        
-        const isUserAdmin = !!roleData;
-        setIsAdmin(isUserAdmin);
+        try {
+          // Primeiro verificar se é admin
+          const { data: roleData, error: roleError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+          
+          if (roleError) {
+            console.error('Erro ao verificar role na sessão inicial:', roleError);
+          }
 
-        // Se é admin, permitir acesso direto
-        if (isUserAdmin) {
-          setLoading(false);
-          return;
-        }
+          const isUserAdmin = !!roleData;
+          console.log('Verificação inicial - É admin?', isUserAdmin);
+          setIsAdmin(isUserAdmin);
 
-        // Para usuários normais, verificar aprovação
-        const { data: approvalData } = await supabase
-          .from('user_approvals')
-          .select('status')
-          .eq('user_id', session.user.id)
-          .eq('status', 'approved')
-          .maybeSingle();
+          // Se é admin, permitir acesso direto
+          if (isUserAdmin) {
+            console.log('Sessão inicial - Usuário é admin, permitindo acesso');
+            setLoading(false);
+            return;
+          }
 
-        // Se não tem aprovação, fazer logout
-        if (!approvalData) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setIsAdmin(false);
-          setLoading(false);
-          return;
+          // Para usuários normais, verificar aprovação
+          const { data: approvalData, error: approvalError } = await supabase
+            .from('user_approvals')
+            .select('status')
+            .eq('user_id', session.user.id)
+            .eq('status', 'approved')
+            .maybeSingle();
+
+          if (approvalError) {
+            console.error('Erro ao verificar aprovação na sessão inicial:', approvalError);
+          }
+
+          console.log('Verificação inicial - Status de aprovação:', approvalData);
+
+          // Se não tem aprovação, fazer logout
+          if (!approvalData) {
+            console.log('Sessão inicial - Usuário não aprovado, fazendo logout');
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            setIsAdmin(false);
+            setLoading(false);
+            return;
+          }
+
+          console.log('Sessão inicial - Usuário aprovado, permitindo acesso');
+        } catch (error) {
+          console.error('Erro na verificação inicial:', error);
         }
       } else {
         setIsAdmin(false);
@@ -119,6 +157,7 @@ const Index = () => {
   }, []);
 
   const handleLogout = async () => {
+    console.log('Fazendo logout manual');
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
@@ -126,6 +165,7 @@ const Index = () => {
   };
 
   if (loading) {
+    console.log('Estado de loading ativo');
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/10 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -134,6 +174,7 @@ const Index = () => {
   }
 
   if (!user) {
+    console.log('Usuário não encontrado, redirecionando para AuthPage');
     return <AuthPage />;
   }
 
@@ -143,8 +184,11 @@ const Index = () => {
     id: user.id
   };
 
+  console.log('Usuário autenticado:', userProps.email, 'Admin:', isAdmin);
+
   // Se o usuário é admin, mostrar painel administrativo
   if (isAdmin) {
+    console.log('Renderizando AdminDashboard');
     return (
       <AdminDashboard 
         user={userProps}
@@ -155,6 +199,7 @@ const Index = () => {
   }
 
   // Caso contrário, mostrar dashboard normal
+  console.log('Renderizando Dashboard normal');
   return (
     <Dashboard 
       user={userProps}
