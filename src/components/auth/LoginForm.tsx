@@ -71,8 +71,8 @@ export function LoginForm({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 container mx-0 my-0 py-[23px] px-0">
-        <div className="max-w-6xl mx-auto">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-8">
@@ -89,10 +89,10 @@ export function LoginForm({
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Login Form Column */}
             <div className="order-2 lg:order-1">
-              <div className="max-w-md mx-auto">
+              <div className="max-w-lg mx-auto lg:max-w-md">
                 <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
                 <CardContent className="p-6 sm:p-8">
                   <div className="text-center mb-6">
