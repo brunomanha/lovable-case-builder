@@ -53,7 +53,6 @@ const Index = () => {
               .from('user_approvals')
               .select('status')
               .eq('user_id', session.user.id)
-              .eq('status', 'approved')
               .maybeSingle();
 
             if (approvalError) {
@@ -62,9 +61,9 @@ const Index = () => {
 
             console.log('Status de aprovação:', approvalData);
 
-            // Se não tem aprovação, fazer logout
-            if (!approvalData) {
-              console.log('Usuário não aprovado, fazendo logout');
+            // Se não tem aprovação ou não está aprovado, fazer logout
+            if (!approvalData || approvalData.status !== 'approved') {
+              console.log('Usuário não aprovado, fazendo logout. Status:', approvalData?.status);
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
@@ -122,7 +121,6 @@ const Index = () => {
             .from('user_approvals')
             .select('status')
             .eq('user_id', session.user.id)
-            .eq('status', 'approved')
             .maybeSingle();
 
           if (approvalError) {
@@ -131,9 +129,9 @@ const Index = () => {
 
           console.log('Verificação inicial - Status de aprovação:', approvalData);
 
-          // Se não tem aprovação, fazer logout
-          if (!approvalData) {
-            console.log('Sessão inicial - Usuário não aprovado, fazendo logout');
+          // Se não tem aprovação ou não está aprovado, fazer logout
+          if (!approvalData || approvalData.status !== 'approved') {
+            console.log('Sessão inicial - Usuário não aprovado, fazendo logout. Status:', approvalData?.status);
             await supabase.auth.signOut();
             setSession(null);
             setUser(null);
