@@ -110,19 +110,10 @@ export default function AuthPage() {
       });
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Abstract Background Elements */}
-      <div className="absolute inset-0 overflow-hidden mx-[23px]">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-3/4 left-1/2 w-48 h-48 bg-accent/10 rounded-full blur-2xl animate-pulse delay-500"></div>
-      </div>
-      
-      <div className="w-full max-w-md mx-auto relative z-10">
-        {showPendingApproval ? <PendingApprovalMessage onBackToLogin={() => {
+  return <div className="w-full h-screen relative overflow-hidden">
+      {showPendingApproval ? <PendingApprovalMessage onBackToLogin={() => {
         setShowPendingApproval(false);
         setIsLogin(true);
       }} /> : isLogin ? <LoginForm onLogin={handleLogin} onSwitchToRegister={() => setIsLogin(false)} /> : <RegisterForm onRegister={handleRegister} onSwitchToLogin={() => setIsLogin(true)} />}
-      </div>
     </div>;
 }

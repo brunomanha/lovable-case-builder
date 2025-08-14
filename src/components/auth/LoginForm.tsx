@@ -63,7 +63,7 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-hidden">
+  return <div className="w-full h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-hidden">
       {/* Modern Abstract Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
@@ -71,8 +71,8 @@ export function LoginForm({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
-        <div className="max-w-7xl mx-auto w-full flex-1">
+      <div className="relative z-10 w-full h-full px-4 py-8 flex flex-col">
+        <div className="w-full flex-1 flex flex-col">
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-8">
@@ -89,10 +89,10 @@ export function LoginForm({
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start w-full">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start w-full max-w-7xl mx-auto flex-1">
             {/* Login Form Column */}
-            <div className="order-2 lg:order-1 w-full">
-              <div className="max-w-lg mx-auto lg:max-w-md">
+            <div className="order-2 lg:order-1 w-full flex items-center justify-center">
+              <div className="w-full max-w-md">
                 <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
                 <CardContent className="p-6 sm:p-8">
                   <div className="text-center mb-6">
@@ -250,16 +250,15 @@ export function LoginForm({
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Footer */}
-      <div className="relative z-10 text-center py-8">
-        <div className="text-xs text-muted-foreground space-y-2">
-          <p>© 2024 IARA Assistente Virtual • v1.0</p>
-          <Button variant="link" className="p-0 h-auto text-xs text-muted-foreground hover:text-primary">
-            Política de Privacidade
-          </Button>
+          {/* Footer */}
+          <div className="text-center py-4 mt-auto">
+            <div className="text-xs text-muted-foreground space-y-2">
+              <p>© 2024 IARA Assistente Virtual • v1.0</p>
+              <Button variant="link" className="p-0 h-auto text-xs text-muted-foreground hover:text-primary">
+                Política de Privacidade
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       
