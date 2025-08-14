@@ -80,9 +80,9 @@ export function LoginForm({
               e.currentTarget.src = '/placeholder.svg';
             }} />
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight px-4">
               Inteligência Artificial para gerenciar
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"> qualquer demanda</span>
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block sm:inline"> qualquer demanda</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-6 max-w-3xl mx-auto leading-relaxed">
               De tarefas simples a projetos complexos, a IARA entende, organiza e entrega soluções rápidas.
