@@ -63,7 +63,7 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  return <div className="w-full min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-hidden">
+  return <div className="w-full min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-x-hidden">
       {/* Modern Abstract Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
