@@ -76,7 +76,7 @@ export function LoginForm({
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-8">
-              <img src="/lovable-uploads/74228248-3957-4616-a5a6-55d4638742ab.png" alt="IARA Assistente Virtual" className="h-28 sm:h-36 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300" onError={e => {
+              <img src="/lovable-uploads/4f483727-be38-4ef1-8c2f-236b9f15c209.png" alt="IARA Assistente Virtual" className="h-56 sm:h-72 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300" onError={e => {
               e.currentTarget.src = '/placeholder.svg';
             }} />
             </div>
