@@ -63,7 +63,7 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  return <div className="w-full min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative">
+  return <div className="w-full bg-gradient-to-br from-background via-accent/30 to-primary/10 relative">
       {/* Modern Abstract Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
@@ -71,25 +71,30 @@ export function LoginForm({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 w-full px-4 py-6 sm:py-8">
-        <div className="w-full flex flex-col space-y-8">
+      <div className="relative z-10 w-full min-h-screen overflow-y-auto">
+        <div className="container mx-auto px-4 py-6 sm:py-8 min-h-screen flex flex-col">
           {/* Hero Section */}
-          <div className="text-center mb-4 sm:mb-8">
-            <div className="flex justify-center mb-6 sm:mb-8">
-              <img src="/lovable-uploads/4f483727-be38-4ef1-8c2f-236b9f15c209.png" alt="IARA Assistente Virtual" className="h-32 sm:h-48 md:h-56 lg:h-64 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300" onError={e => {
-              e.currentTarget.src = '/placeholder.svg';
-            }} />
+          <div className="text-center mb-6 sm:mb-8 flex-shrink-0">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <img 
+                src="/lovable-uploads/4f483727-be38-4ef1-8c2f-236b9f15c209.png" 
+                alt="IARA Assistente Virtual" 
+                className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300" 
+                onError={e => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }} 
+              />
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-3 sm:mb-4 leading-tight px-2 sm:px-4">
-              Inteligência Artificial para gerenciar
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block sm:inline"> qualquer demanda</span>
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground mb-2 sm:mb-3 leading-tight">
+              Inteligência Artificial para gerenciar{" "}
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-nowrap">qualquer demanda</span>
             </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed px-2 sm:px-4">
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed">
               De tarefas simples a projetos complexos, a IARA entende, organiza e entrega soluções rápidas.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start w-full max-w-7xl mx-auto pb-8">
+          <div className="flex-1 grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start w-full max-w-6xl mx-auto pb-6">
             {/* Login Form Column */}
             <div className="order-2 lg:order-1 w-full flex justify-center">
               <div className="w-full max-w-md">
