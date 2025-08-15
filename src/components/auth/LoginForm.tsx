@@ -63,7 +63,7 @@ export function LoginForm({
       setIsLoading(false);
     }
   };
-  return <div className="w-full min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-x-hidden">
+  return <div className="w-full min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/10 relative overflow-x-hidden overflow-y-auto">
       {/* Modern Abstract Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
@@ -71,8 +71,8 @@ export function LoginForm({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 w-full min-h-screen px-4 py-6 sm:py-8 flex flex-col">
-        <div className="w-full flex-1 flex flex-col">
+      <div className="relative z-10 w-full min-h-screen px-4 py-6 sm:py-8">
+        <div className="w-full min-h-full flex flex-col">
           {/* Hero Section */}
           <div className="text-center mb-8 sm:mb-12">
             <div className="flex justify-center mb-6 sm:mb-8">
@@ -89,9 +89,9 @@ export function LoginForm({
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start w-full max-w-7xl mx-auto flex-1 min-h-0">
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start w-full max-w-7xl mx-auto flex-1 pb-8">
             {/* Login Form Column */}
-            <div className="order-2 lg:order-1 w-full flex items-center justify-center">
+            <div className="order-2 lg:order-1 w-full flex items-start justify-center">
               <div className="w-full max-w-md">
                 <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
                 <CardContent className="p-6 sm:p-8">
