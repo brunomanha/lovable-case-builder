@@ -57,13 +57,17 @@ const Index = () => {
 
             if (approvalError) {
               console.error('Erro ao verificar aprovação:', approvalError);
+              // Se houver erro na consulta, não bloquear o acesso
+              setLoading(false);
+              return;
             }
 
             console.log('Status de aprovação:', approvalData);
 
-            // Se não tem aprovação ou não está aprovado, fazer logout
-            if (!approvalData || approvalData.status !== 'approved') {
-              console.log('Usuário não aprovado, fazendo logout. Status:', approvalData?.status);
+            // Se não tem aprovação, significa que o usuário nunca se registrou pelo sistema
+            // Apenas usuários com status pendente devem ser bloqueados
+            if (approvalData && approvalData.status !== 'approved') {
+              console.log('Usuário com aprovação pendente, fazendo logout. Status:', approvalData.status);
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
@@ -125,13 +129,17 @@ const Index = () => {
 
           if (approvalError) {
             console.error('Erro ao verificar aprovação na sessão inicial:', approvalError);
+            // Se houver erro na consulta, não bloquear o acesso
+            setLoading(false);
+            return;
           }
 
           console.log('Verificação inicial - Status de aprovação:', approvalData);
 
-          // Se não tem aprovação ou não está aprovado, fazer logout
-          if (!approvalData || approvalData.status !== 'approved') {
-            console.log('Sessão inicial - Usuário não aprovado, fazendo logout. Status:', approvalData?.status);
+          // Se não tem aprovação, significa que o usuário nunca se registrou pelo sistema
+          // Apenas usuários com status pendente devem ser bloqueados
+          if (approvalData && approvalData.status !== 'approved') {
+            console.log('Sessão inicial - Usuário com aprovação pendente, fazendo logout. Status:', approvalData.status);
             await supabase.auth.signOut();
             setSession(null);
             setUser(null);
