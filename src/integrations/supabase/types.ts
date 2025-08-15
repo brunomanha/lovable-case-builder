@@ -312,6 +312,42 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       usage_stats: {
         Row: {
           api_requests: number
@@ -413,6 +449,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          action_type: string
+          max_attempts?: number
+          time_window?: unknown
+          user_id: string
+        }
+        Returns: boolean
+      }
       delete_user_completely: {
         Args: { user_id_to_delete: string }
         Returns: boolean
@@ -424,6 +469,15 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      log_admin_action: {
+        Args: {
+          action_type: string
+          details?: Json
+          resource_id?: string
+          resource_type: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
