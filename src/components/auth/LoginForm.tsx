@@ -71,10 +71,10 @@ export function LoginForm({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/10 via-transparent to-accent/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 w-full min-h-screen overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 sm:py-8 min-h-screen flex flex-col">
+      <div className="relative z-10 w-full min-h-screen">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           {/* Hero Section */}
-          <div className="text-center mb-6 sm:mb-8 flex-shrink-0">
+          <div className="text-center mb-6 sm:mb-8">
             <div className="flex justify-center mb-4 sm:mb-6">
               <img 
                 src="/lovable-uploads/4f483727-be38-4ef1-8c2f-236b9f15c209.png" 
@@ -94,11 +94,11 @@ export function LoginForm({
             </p>
           </div>
 
-          <div className="flex-1 grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start w-full max-w-6xl mx-auto pb-6">
-            {/* Login Form Column */}
-            <div className="order-2 lg:order-1 w-full flex justify-center">
-              <div className="w-full max-w-md">
-                <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+          {/* Main content layout - responsive flex */}
+          <div className="flex flex-wrap lg:flex-nowrap items-start justify-center gap-8 lg:gap-12 w-full max-w-7xl mx-auto pb-6">
+            {/* Login Form */}
+            <div className="login-card w-full max-w-md lg:max-w-lg order-2 lg:order-1 flex-shrink-0">
+              <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm w-full">
                 <CardContent className="p-6 sm:p-8">
                   <div className="text-center mb-6">
                     <h2 className="text-xl font-semibold text-foreground mb-2">Acesse sua conta</h2>
@@ -160,12 +160,11 @@ export function LoginForm({
                     </Button>
                   </div>
                 </CardContent>
-                </Card>
-              </div>
+              </Card>
             </div>
 
-            {/* Benefits Column */}
-            <div className="order-1 lg:order-2 space-y-6 sm:space-y-8 w-full overflow-hidden">
+            {/* Features Section */}
+            <div className="features w-full lg:flex-1 order-1 lg:order-2 space-y-6 sm:space-y-8 min-w-0">
               {/* Commercial Benefits Section */}
               <div className="space-y-4 sm:space-y-6">
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground text-center lg:text-left px-2">
@@ -255,8 +254,9 @@ export function LoginForm({
               </div>
             </div>
           </div>
+
           {/* Footer */}
-          <div className="text-center py-4">
+          <div className="text-center py-6 mt-8">
             <div className="text-xs text-muted-foreground space-y-2">
               <p>© 2024 IARA Assistente Virtual • v1.0</p>
               <Button variant="link" className="p-0 h-auto text-xs text-muted-foreground hover:text-primary">

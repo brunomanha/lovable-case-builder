@@ -110,7 +110,7 @@ export default function AuthPage() {
       });
     }
   };
-  return <div className="w-full h-screen relative overflow-hidden">
+  return <div className="w-full min-h-screen relative">
       {showPendingApproval ? <PendingApprovalMessage onBackToLogin={() => {
         setShowPendingApproval(false);
         setIsLogin(true);
