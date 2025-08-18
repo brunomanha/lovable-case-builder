@@ -97,22 +97,66 @@ class FileProcessingService {
   }
 
   private async extractTextFromPDF(file: File): Promise<string> {
-    const base64 = await this.fileToBase64(file);
-    
     try {
-      const response = await fetch('/api/file-processing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, filename: file.name, type: 'pdf' })
+      // Converter arquivo para buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Tentar extração via Edge Function (que agora tem PDF real)
+      const supabase = (await import('../integrations/supabase/client')).supabase;
+      
+      const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
+        body: {
+          file: Array.from(uint8Array),
+          filename: file.name
+        }
       });
       
-      if (!response.ok) throw new Error('Falha na extração do PDF');
+      if (error) throw error;
       
-      const result = await response.json();
-      return result.text || 'Texto não extraído do PDF';
+      const extractedText = data?.text || '';
+      
+      // Se o texto extraído estiver muito pequeno, pode ser um PDF escaneado
+      if (extractedText.trim().length < 50) {
+        console.warn('PDF pode ser escaneado, tentando OCR...');
+        return await this.tryOCRExtraction(file);
+      }
+      
+      return extractedText || `[PDF] ${file.name} - Processado mas sem texto extraível`;
+      
     } catch (error) {
-      console.warn('API de extração não disponível, usando fallback');
-      return `[PDF] ${file.name} - Conteúdo para processamento pela IA (${(file.size / 1024).toFixed(1)}KB)`;
+      console.warn('Erro na extração de PDF:', error);
+      // Tentar OCR como fallback para PDFs escaneados
+      return await this.tryOCRExtraction(file);
+    }
+  }
+
+  private async tryOCRExtraction(file: File): Promise<string> {
+    try {
+      // Usar Tesseract.js para OCR do PDF
+      const tesseract = await import('tesseract.js');
+      const worker = await tesseract.createWorker('por');
+      
+      // Converter PDF para imagem primeiro (simplificado)
+      const result = await worker.recognize(file);
+      await worker.terminate();
+      
+      if (result.data.text && result.data.text.trim().length > 10) {
+        return `[PDF/OCR] ${file.name}\n\nTexto extraído via OCR:\n${result.data.text}`;
+      }
+      
+      throw new Error('OCR não conseguiu extrair texto suficiente');
+      
+    } catch (ocrError) {
+      console.warn('OCR falhou:', ocrError);
+      return `[PDF] ${file.name} - Arquivo PDF não legível automaticamente (${(file.size / 1024).toFixed(1)}KB)
+      
+ATENÇÃO: Este PDF pode ser:
+- Documento escaneado (imagem) 
+- Protegido contra extração de texto
+- Corrompido ou formato não suportado
+
+Para análise completa, reenvie o documento em formato editável (DOCX, TXT) ou PDF com texto selecionável.`;
     }
   }
 
@@ -137,22 +181,60 @@ class FileProcessingService {
   }
 
   private async extractTextFromImage(file: File): Promise<string> {
-    const base64 = await this.fileToBase64(file);
-    
     try {
-      const response = await fetch('/api/file-processing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, filename: file.name, type: 'image' })
-      });
+      // Usar Tesseract.js para OCR real
+      const tesseract = await import('tesseract.js');
+      const worker = await tesseract.createWorker('por'); // Português
       
-      if (!response.ok) throw new Error('Falha no OCR da imagem');
+      console.log('Iniciando OCR da imagem:', file.name);
+      const result = await worker.recognize(file);
+      await worker.terminate();
       
-      const result = await response.json();
-      return result.text || 'Texto não encontrado na imagem';
+      if (result.data.text && result.data.text.trim().length > 10) {
+        return `**[Início Anexo – ${file.name}]**
+
+IMAGEM PROCESSADA COM OCR
+Arquivo: ${file.name}
+Tamanho: ${(file.size / 1024).toFixed(1)}KB
+Confiança: ${(result.data.confidence * 100).toFixed(1)}%
+
+TEXTO EXTRAÍDO:
+${result.data.text.trim()}
+
+**[Fim Anexo – ${file.name}]**`;
+      } else {
+        return `**[Início Anexo – ${file.name}]**
+
+IMAGEM PROCESSADA - POUCO TEXTO DETECTADO
+Arquivo: ${file.name}
+Tamanho: ${(file.size / 1024).toFixed(1)}KB
+Status: OCR concluído mas texto insuficiente
+
+POSSÍVEIS RAZÕES:
+- Imagem sem texto legível
+- Qualidade da imagem inadequada
+- Texto em idioma não suportado
+- Formatação complexa
+
+**[Fim Anexo – ${file.name}]**`;
+      }
+      
     } catch (error) {
-      console.warn('OCR não disponível, usando fallback');
-      return `[IMG] ${file.name} - Imagem para análise visual pela IA (${(file.size / 1024).toFixed(1)}KB)`;
+      console.warn('Erro no OCR:', error);
+      return `**[Início Anexo – ${file.name}]**
+
+ERRO NO PROCESSAMENTO OCR
+Arquivo: ${file.name}
+Tamanho: ${(file.size / 1024).toFixed(1)}KB
+Erro: ${error.message}
+
+RECOMENDAÇÃO:
+Para melhor extração de texto, envie:
+- Imagens com boa resolução
+- Texto em alto contraste
+- Documentos em formato PDF ou DOCX quando possível
+
+**[Fim Anexo – ${file.name}]**`;
     }
   }
 

@@ -217,68 +217,111 @@ Status: Arquivo detectado e disponível para processamento especializado`;
     // Funções auxiliares para extração de texto
     async function extractTextFromPDF(buffer: Uint8Array, filename: string): Promise<string> {
       try {
-        // Simular extração de PDF - EM PRODUÇÃO usar biblioteca como pdf-parse
-        return `DOCUMENTO PDF EXTRAÍDO: ${filename}
+        // Usar pdf-parse para extração real de texto
+        const pdfParse = await import('https://esm.sh/pdf-parse@1.1.1');
+        
+        const pdfData = await pdfParse.default(buffer);
+        
+        if (pdfData.text && pdfData.text.trim().length > 0) {
+          return `**[Início Anexo – ${filename}]**
 
-Este é um documento PDF que foi processado para extração de texto.
-Tamanho do arquivo: ${Math.round(buffer.length / 1024)}KB
-Status de extração: Concluído com sucesso
+DOCUMENTO PDF PROCESSADO COM SUCESSO
+Páginas: ${pdfData.numpages}
+Tamanho: ${Math.round(buffer.length / 1024)}KB
+Status: Texto extraído com sucesso
 
-CONTEÚDO SIMULADO DO PDF:
-[Em um ambiente de produção, aqui seria o texto real extraído do PDF usando uma biblioteca como pdf-parse, PDF.js ou similar]
+CONTEÚDO EXTRAÍDO:
+${pdfData.text.trim()}
 
-O documento contém informações estruturadas típicas de documentos PDF, incluindo:
-- Cabeçalhos e parágrafos formatados
-- Possíveis tabelas de dados
-- Listas numeradas ou com marcadores  
-- Rodapés e numeração de páginas
-- Metadados do documento
+METADADOS:
+- Título: ${pdfData.info?.Title || 'Não informado'}
+- Autor: ${pdfData.info?.Author || 'Não informado'}  
+- Data de Criação: ${pdfData.info?.CreationDate || 'Não informado'}
+- Data de Modificação: ${pdfData.info?.ModDate || 'Não informado'}
 
-Para implementar extração real de PDF, instale a biblioteca pdf-parse:
-npm install pdf-parse
+**[Fim Anexo – ${filename}]**`;
+        } else {
+          return `**[Início Anexo – ${filename}]**
 
-Exemplo de código para extração real:
-const pdfParse = require('pdf-parse');
-const pdfContent = await pdfParse(buffer);
-return pdfContent.text;`;
+ATENÇÃO: PDF processado mas SEM TEXTO EXTRAÍVEL
+Páginas: ${pdfData.numpages || 0}
+Tamanho: ${Math.round(buffer.length / 1024)}KB
+
+DIAGNÓSTICO:
+Este PDF não contém texto extraível pelos seguintes motivos possíveis:
+1. Documento escaneado (somente imagens)
+2. PDF protegido contra extração de texto
+3. Arquivo criado como imagem (sem camada de texto)
+4. Formato PDF não padrão
+
+AÇÃO REQUERIDA:
+▶ Reenvie o documento em formato editável (DOCX, TXT)
+▶ Ou forneça PDF com texto selecionável
+▶ Alternativa: Transcreva manualmente o conteúdo relevante
+
+**[Fim Anexo – ${filename}]**`;
+        }
+        
       } catch (error) {
-        return `Erro ao extrair texto do PDF ${filename}: ${error.message}`;
+        console.error('Erro ao extrair texto do PDF:', error);
+        return `**[Início Anexo – ${filename}]**
+
+ERRO NO PROCESSAMENTO DO PDF
+Tamanho: ${Math.round(buffer.length / 1024)}KB
+Erro: ${error.message}
+
+POSSÍVEIS CAUSAS:
+- PDF corrompido ou formato inválido
+- Arquivo protegido por senha
+- Limitações de processamento
+- Formato não suportado
+
+RECOMENDAÇÃO:
+Converta para formato editável ou reenvie versão não protegida.
+
+**[Fim Anexo – ${filename}]**`;
       }
     }
 
     async function extractTextFromImage(buffer: Uint8Array, filename: string): Promise<string> {
       try {
-        // Simular OCR de imagem - EM PRODUÇÃO usar Tesseract.js, Google Vision API ou Azure OCR
-        return `IMAGEM PROCESSADA VIA OCR: ${filename}
+        // Para imagens, usar OCR real seria mais complexo em Edge Functions
+        // Por enquanto, retornamos uma resposta mais adequada para o contexto
+        return `**[Início Anexo – ${filename}]**
 
-Esta imagem foi analisada para extração de texto usando tecnologia OCR.
-Tamanho do arquivo: ${Math.round(buffer.length / 1024)}KB
-Formato detectado: Imagem digital
-Status de OCR: Processamento concluído
+IMAGEM PROCESSADA 
+Arquivo: ${filename}
+Tamanho: ${Math.round(buffer.length / 1024)}KB
+Tipo: Arquivo de imagem
 
-TEXTO EXTRAÍDO DA IMAGEM:
-[Em um ambiente de produção, aqui seria o texto real extraído da imagem usando OCR]
+OBSERVAÇÃO:
+Esta imagem foi identificada e está disponível para análise visual.
+Para extração de texto em imagens, recomenda-se:
 
-A imagem pode conter:
-- Texto digitado ou manuscrito
-- Tabelas e formulários
-- Documentos escaneados
-- Capturas de tela com informações
-- Gráficos com rótulos de texto
+1. Converta documentos escaneados para PDF com OCR
+2. Digite o conteúdo textual da imagem se necessário
+3. Use ferramentas de OCR antes do upload
 
-Para implementar OCR real, use uma das seguintes opções:
+ANÁLISE DISPONÍVEL:
+- A imagem pode ser analisada visualmente pela IA
+- Conteúdo gráfico e layout podem ser interpretados
+- Textos visíveis podem ser identificados durante a análise
 
-1. Tesseract.js (local):
-npm install tesseract.js
-const { createWorker } = require('tesseract.js');
-
-2. Google Vision API (mais preciso):
-Configurar chave da API do Google Cloud Vision
-
-3. Azure Computer Vision:
-Usar Azure Cognitive Services para OCR`;
+**[Fim Anexo – ${filename}]**`;
       } catch (error) {
-        return `Erro no OCR da imagem ${filename}: ${error.message}`;
+        return `**[Início Anexo – ${filename}]**
+
+ERRO NO PROCESSAMENTO DA IMAGEM
+Arquivo: ${filename}
+Tamanho: ${Math.round(buffer.length / 1024)}KB
+Erro: ${error.message}
+
+RECOMENDAÇÃO:
+- Verifique se o arquivo de imagem não está corrompido
+- Tente converter para PDF com OCR
+- Forneça transcrição textual se necessário
+
+**[Fim Anexo – ${filename}]**`;
       }
     }
 
