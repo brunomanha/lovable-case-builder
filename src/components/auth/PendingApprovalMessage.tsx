@@ -31,8 +31,8 @@ export function PendingApprovalMessage({ onBackToLogin }: PendingApprovalMessage
                 Solicitação Enviada
               </p>
               <p className="text-sm text-muted-foreground">
-                Seu cadastro foi enviado para análise do administrador. 
-                Você receberá um email quando sua conta for aprovada.
+                Cadastro enviado para aprovação. Aguarde um administrador aprovar sua conta.
+                Você receberá um email de confirmação assim que sua conta for ativada.
               </p>
             </div>
           </div>

@@ -66,6 +66,18 @@ serve(async (req) => {
         console.error('Erro ao ativar usuário:', authError);
       }
 
+      // Criar role de usuário normal para usuários aprovados
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'user'
+        });
+
+      if (roleError) {
+        console.error('Erro ao criar role de usuário:', roleError);
+      }
+
       // Criar entrada na tabela de limitações para demos se for demo@email.com
       if (approval.email === 'demo@email.com') {
         await supabase
@@ -87,19 +99,27 @@ serve(async (req) => {
         ? 'Cadastro Aprovado - IARA' 
         : 'Cadastro Não Aprovado - IARA';
         
-      const message = action === 'approve'
+        const message = action === 'approve'
         ? `
-          <h2>🎉 Seu cadastro foi aprovado!</h2>
-          <p>Olá ${approval.display_name},</p>
-          <p>Seu cadastro no sistema IARA foi aprovado com sucesso!</p>
-          <p>Agora você pode acessar o sistema e utilizar nossa plataforma de análise jurídica inteligente.</p>
-          <p><a href="${supabaseUrl.replace('/v1', '')}" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar IARA</a></p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #059669; text-align: center;">🎉 Cadastro Aprovado - IARA</h2>
+            <p>Olá <strong>${approval.display_name}</strong>,</p>
+            <p>Seu cadastro no sistema IARA foi <strong>aprovado com sucesso</strong>!</p>
+            <p>Agora você pode acessar o sistema e utilizar nossa plataforma de análise jurídica inteligente.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${supabaseUrl.replace('/v1', '')}" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Acessar IARA</a>
+            </div>
+            <p style="color: #666; font-size: 14px;">Bem-vindo à nossa plataforma! Em caso de dúvidas, entre em contato conosco.</p>
+          </div>
         `
         : `
-          <h2>Cadastro Não Aprovado</h2>
-          <p>Olá ${approval.display_name},</p>
-          <p>Infelizmente seu cadastro no sistema IARA não foi aprovado no momento.</p>
-          <p>Entre em contato conosco se precisar de mais informações.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #dc2626; text-align: center;">Cadastro Não Aprovado</h2>
+            <p>Olá <strong>${approval.display_name}</strong>,</p>
+            <p>Infelizmente seu cadastro no sistema IARA não foi aprovado no momento.</p>
+            <p>Entre em contato conosco se precisar de mais informações sobre os critérios de aprovação.</p>
+            <p style="color: #666; font-size: 14px;">Atenciosamente,<br>Equipe IARA</p>
+          </div>
         `;
 
       await resend.emails.send({

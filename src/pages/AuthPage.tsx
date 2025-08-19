@@ -4,49 +4,62 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 import { PendingApprovalMessage } from "@/components/auth/PendingApprovalMessage";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPendingApproval, setShowPendingApproval] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   const handleLogin = async (email: string, password: string) => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
+
       if (error) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive"
-        });
+        if (error.message.includes('Invalid login credentials')) {
+          toast({
+            title: "Credenciais inválidas",
+            description: "Email ou senha incorretos.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Erro no login",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
         return;
       }
+
       if (data.user) {
-        // Verificar se o usuário está ativo
-        const {
-          data: profile,
-          error: profileError
-        } = await supabase.from('profiles').select('is_active').eq('user_id', data.user.id).maybeSingle();
-        if (profileError) {
-          console.error('Erro ao verificar perfil:', profileError);
+        // Verificar se o usuário tem aprovação
+        const { data: approval, error: approvalError } = await supabase
+          .from('user_approvals')
+          .select('status')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (approvalError) {
+          console.error('Erro ao verificar aprovação:', approvalError);
           return;
         }
-        if (profile && !profile.is_active) {
-          // Fazer logout imediatamente se conta estiver inativa
+
+        // Se tem registro de aprovação mas não está aprovado
+        if (approval && approval.status !== 'approved') {
           await supabase.auth.signOut();
           toast({
-            title: "Conta inativa",
-            description: "Sua conta foi desativada. Entre em contato com o administrador.",
+            title: "Conta pendente",
+            description: approval.status === 'rejected' ? 
+              "Sua conta foi rejeitada. Entre em contato com o suporte." :
+              "Sua conta ainda está aguardando aprovação.",
             variant: "destructive"
           });
           return;
         }
+
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta!"
@@ -60,60 +73,85 @@ export default function AuthPage() {
       });
     }
   };
+
   const handleRegister = async (name: string, email: string, password: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      const {
-        data,
-        error
-      } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: {
-            name
-          }
+          data: { name }
         }
       });
+
       if (error) throw error;
+
+      // Fazer logout imediato para evitar acesso não aprovado
+      await supabase.auth.signOut();
 
       // Enviar solicitação de aprovação
       if (data.user) {
         try {
-          const {
-            error: approvalError
-          } = await supabase.functions.invoke('request-approval', {
+          const { error: approvalError } = await supabase.functions.invoke('request-approval', {
             body: {
               userId: data.user.id,
               email: email,
               displayName: name
             }
           });
+
           if (approvalError) throw approvalError;
+          
+          toast({
+            title: "Cadastro enviado com sucesso!",
+            description: "Cadastro enviado para aprovação. Aguarde um administrador aprovar sua conta.",
+            variant: "default",
+          });
+          
           setShowPendingApproval(true);
         } catch (approvalError: any) {
           console.error("Approval request error:", approvalError);
           toast({
             title: "Conta criada",
             description: "Conta criada mas houve erro no processo de aprovação. Entre em contato com o suporte.",
-            variant: "destructive"
+            variant: "destructive",
           });
+          setShowPendingApproval(true); // Ainda mostrar a tela de pendente
         }
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-      toast({
-        title: "Erro no cadastro",
-        description: error.message,
-        variant: "destructive"
-      });
+      
+      if (error.message?.includes('User already registered')) {
+        toast({
+          title: "Usuário já cadastrado",
+          description: "Este email já está registrado. Tente fazer login.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   };
-  return <div className="w-full min-h-screen relative">
-      {showPendingApproval ? <PendingApprovalMessage onBackToLogin={() => {
-        setShowPendingApproval(false);
-        setIsLogin(true);
-      }} /> : isLogin ? <LoginForm onLogin={handleLogin} onSwitchToRegister={() => setIsLogin(false)} /> : <RegisterForm onRegister={handleRegister} onSwitchToLogin={() => setIsLogin(true)} />}
-    </div>;
+
+  return (
+    <div className="w-full min-h-screen relative">
+      {showPendingApproval ? (
+        <PendingApprovalMessage onBackToLogin={() => {
+          setShowPendingApproval(false);
+          setIsLogin(true);
+        }} />
+      ) : isLogin ? (
+        <LoginForm onLogin={handleLogin} onSwitchToRegister={() => setIsLogin(false)} />
+      ) : (
+        <RegisterForm onRegister={handleRegister} onSwitchToLogin={() => setIsLogin(true)} />
+      )}
+    </div>
+  );
 }

@@ -65,9 +65,9 @@ const Index = () => {
             console.log('Status de aprovação:', approvalData);
 
             // Se não tem aprovação, significa que o usuário nunca se registrou pelo sistema
-            // Apenas usuários com status pendente devem ser bloqueados
+            // Usuários pendentes ou rejeitados não podem acessar
             if (approvalData && approvalData.status !== 'approved') {
-              console.log('Usuário com aprovação pendente, fazendo logout. Status:', approvalData.status);
+              console.log('Usuário sem aprovação válida, fazendo logout. Status:', approvalData.status);
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
@@ -137,9 +137,9 @@ const Index = () => {
           console.log('Verificação inicial - Status de aprovação:', approvalData);
 
           // Se não tem aprovação, significa que o usuário nunca se registrou pelo sistema
-          // Apenas usuários com status pendente devem ser bloqueados
+          // Usuários pendentes ou rejeitados não podem acessar
           if (approvalData && approvalData.status !== 'approved') {
-            console.log('Sessão inicial - Usuário com aprovação pendente, fazendo logout. Status:', approvalData.status);
+            console.log('Sessão inicial - Usuário sem aprovação válida, fazendo logout. Status:', approvalData.status);
             await supabase.auth.signOut();
             setSession(null);
             setUser(null);
